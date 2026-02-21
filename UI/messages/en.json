@@ -25,6 +25,12 @@
     "mostRecent": "Most Recent",
     "nearMe": "Near Me"
   },
+  "map": {
+    "title": "Issue Map",
+    "locating": "Locating...",
+    "nearbyIssues": "Nearby Issues",
+    "loadingMap": "Loading map..."
+  },
   "report": {
     "title": "Report an Issue",
     "step1": "Take or Upload Photo",
