@@ -1,0 +1,292 @@
+"use client"
+
+import { useState } from "react"
+import { useLanguage } from "@/lib/language-context"
+import type { Issue, Comment } from "@/lib/types"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import {
+  ArrowLeft,
+  ThumbsUp,
+  MapPin,
+  Send,
+  CheckCircle2,
+  Brain,
+  User,
+  Clock,
+  ImageIcon,
+} from "lucide-react"
+import { getCategoryIcon, getSeverityColor, getStatusColor, getTimeAgo } from "@/lib/category-helpers"
+import { mockComments } from "@/lib/mock-data"
+import { cn } from "@/lib/utils"
+
+interface IssueDetailScreenProps {
+  issue: Issue
+  onBack: () => void
+}
+
+export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
+  const { t } = useLanguage()
+  const [upvotes, setUpvotes] = useState(issue.upvotes)
+  const [hasUpvoted, setHasUpvoted] = useState(false)
+  const [comments, setComments] = useState<Comment[]>(
+    mockComments.filter((c) => c.issueId === issue.id)
+  )
+  const [newComment, setNewComment] = useState("")
+  const [resolveVotes, setResolveVotes] = useState({ yes: 1, no: 0 })
+  const [hasVoted, setHasVoted] = useState(false)
+
+  const CategoryIcon = getCategoryIcon(issue.category)
+  const totalVotes = resolveVotes.yes + resolveVotes.no
+  const resolveProgress = totalVotes > 0 ? (resolveVotes.yes / 3) * 100 : 0
+
+  const handleUpvote = () => {
+    if (!hasUpvoted) {
+      setUpvotes((prev) => prev + 1)
+      setHasUpvoted(true)
+    } else {
+      setUpvotes((prev) => prev - 1)
+      setHasUpvoted(false)
+    }
+  }
+
+  const handleResolveVote = (vote: "yes" | "no") => {
+    if (hasVoted) return
+    setResolveVotes((prev) => ({
+      ...prev,
+      [vote]: prev[vote] + 1,
+    }))
+    setHasVoted(true)
+  }
+
+  const handlePostComment = () => {
+    if (!newComment.trim()) return
+    const comment: Comment = {
+      id: `c-${Date.now()}`,
+      issueId: issue.id,
+      text: newComment.trim(),
+      author: "You",
+      isAnonymous: false,
+      createdAt: new Date().toISOString(),
+    }
+    setComments((prev) => [comment, ...prev])
+    setNewComment("")
+  }
+
+  const severityLabel =
+    issue.severity === "low"
+      ? t("low")
+      : issue.severity === "medium"
+        ? t("medium")
+        : issue.severity === "high"
+          ? t("high")
+          : t("critical")
+
+  const statusLabel =
+    issue.status === "open"
+      ? t("open")
+      : issue.status === "in-progress"
+        ? t("inProgress")
+        : t("resolved")
+
+  return (
+    <div className="flex flex-col pb-20">
+      {/* Back header */}
+      <div className="sticky top-14 z-30 border-b border-border bg-card/95 backdrop-blur-md">
+        <div className="mx-auto flex h-12 max-w-5xl items-center gap-3 px-4">
+          <button
+            onClick={onBack}
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-foreground transition-colors hover:bg-accent"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-sm font-semibold text-foreground line-clamp-1">{issue.title}</h1>
+        </div>
+      </div>
+
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">
+        {/* Photo placeholder */}
+        <div className="flex aspect-video items-center justify-center rounded-xl border border-border bg-muted">
+          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+            <ImageIcon className="h-10 w-10" />
+            <span className="text-xs font-medium">Issue Photo</span>
+          </div>
+        </div>
+
+        {/* AI Tag */}
+        {issue.aiConfidence && (
+          <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+            <Brain className="h-4 w-4 text-primary" />
+            <span className="text-xs font-medium text-foreground">
+              {t("aiClassified")}: {issue.aiCategory} — {issue.aiConfidence}% {t("confidence")}
+            </span>
+          </div>
+        )}
+
+        {/* Severity bar */}
+        {issue.severityScore && (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-foreground">{t("severityScore")}</span>
+              <span className="text-xs font-bold text-foreground">{issue.severityScore}/10</span>
+            </div>
+            <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  issue.severityScore >= 8
+                    ? "bg-destructive"
+                    : issue.severityScore >= 5
+                      ? "bg-warning"
+                      : "bg-primary"
+                )}
+                style={{ width: `${issue.severityScore * 10}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Status + Severity badges */}
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+            <CategoryIcon className="h-4 w-4 text-primary" />
+          </div>
+          <Badge className={cn("text-[10px] font-semibold", getSeverityColor(issue.severity))}>
+            {severityLabel}
+          </Badge>
+          <Badge className={cn("text-[10px] font-medium", getStatusColor(issue.status))}>
+            {statusLabel}
+          </Badge>
+        </div>
+
+        {/* Title + Description */}
+        <div className="flex flex-col gap-2">
+          <h2 className="text-xl font-bold text-foreground text-balance">{issue.title}</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">{issue.description}</p>
+        </div>
+
+        {/* Location */}
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-3">
+          <MapPin className="h-4 w-4 text-primary" />
+          <span className="text-sm text-foreground">{issue.location}</span>
+        </div>
+
+        {/* Map snippet placeholder */}
+        <div className="flex h-32 items-center justify-center rounded-xl border border-border bg-muted">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <MapPin className="h-5 w-5" />
+            <span className="text-xs font-medium">Map Preview</span>
+          </div>
+        </div>
+
+        {/* Upvote button (large) */}
+        <button
+          onClick={handleUpvote}
+          className={cn(
+            "flex min-h-[48px] items-center justify-center gap-2 rounded-xl border-2 px-6 py-3 text-sm font-semibold transition-all",
+            hasUpvoted
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-border bg-card text-foreground hover:border-primary/50 hover:bg-primary/5"
+          )}
+        >
+          <ThumbsUp className={cn("h-5 w-5", hasUpvoted && "fill-current")} />
+          {t("upvote")} ({upvotes})
+        </button>
+
+        {/* Resolution voting */}
+        {issue.status !== "resolved" && (
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
+            <h3 className="text-sm font-semibold text-foreground">
+              {t("hasThisBeenResolved")}
+            </h3>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleResolveVote("yes")}
+                disabled={hasVoted}
+                className={cn(
+                  "flex flex-1 min-h-[44px] items-center justify-center gap-2 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all",
+                  hasVoted && resolveVotes.yes > 0
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-foreground hover:border-primary/50",
+                  hasVoted && "cursor-default"
+                )}
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                {t("yes")}
+              </button>
+              <button
+                onClick={() => handleResolveVote("no")}
+                disabled={hasVoted}
+                className={cn(
+                  "flex flex-1 min-h-[44px] items-center justify-center gap-2 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all",
+                  hasVoted && resolveVotes.no > 0
+                    ? "border-destructive bg-destructive/10 text-destructive"
+                    : "border-border text-foreground hover:border-destructive/50",
+                  hasVoted && "cursor-default"
+                )}
+              >
+                {t("no")}
+              </button>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Progress value={Math.min(resolveProgress, 100)} className="h-2" />
+              <p className="text-[10px] text-muted-foreground">
+                {resolveVotes.yes} / 3 {t("confirmationsNeeded")}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Comments Section */}
+        <div className="flex flex-col gap-4">
+          <h3 className="text-sm font-semibold text-foreground">
+            {t("comments")} ({comments.length})
+          </h3>
+
+          {/* Comment Input */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handlePostComment()}
+              placeholder={t("writeAComment")}
+              className="flex-1 rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            <button
+              onClick={handlePostComment}
+              disabled={!newComment.trim()}
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+              aria-label="Post comment"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Comment Bubbles */}
+          <div className="flex flex-col gap-3">
+            {comments.map((comment) => (
+              <div
+                key={comment.id}
+                className="flex flex-col gap-1 rounded-xl border border-border bg-muted/30 px-4 py-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                    <User className="h-3 w-3" />
+                    {comment.isAnonymous ? t("anonymous") : comment.author}
+                  </div>
+                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    {getTimeAgo(comment.createdAt)}
+                  </div>
+                </div>
+                <p className="text-sm text-foreground leading-relaxed">{comment.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
