@@ -24,6 +24,7 @@ import {
 import { getCategoryIcon, getSeverityColor } from "@/lib/category-helpers"
 import { cn } from "@/lib/utils"
 import { createIssue } from "@/lib/api-client"
+import { CameraCapture } from "@/components/camera-capture"
 
 const categories: { value: IssueCategory; labelKey: string }[] = [
   { value: "potholes", labelKey: "potholes" },
@@ -65,20 +66,36 @@ export function ReportIssueScreen() {
   const [submitted, setSubmitted] = useState(false)
   const [reportId, setReportId] = useState("")
   const [cameraCaptureEnabled, setCameraCaptureEnabled] = useState(false)
+  const [showCameraModal, setShowCameraModal] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (typeof window === "undefined") return
 
-    const userAgent = window.navigator.userAgent || ""
-    const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(userAgent)
+    // Check if camera API is available
+    const hasCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
     const isSecure = window.isSecureContext
 
-    setCameraCaptureEnabled(isMobileDevice && isSecure)
+    setCameraCaptureEnabled(hasCamera && isSecure)
   }, [])
 
   const handlePhotoCapture = () => {
     fileInputRef.current?.click()
+  }
+
+  const handleCameraCapture = () => {
+    setShowCameraModal(true)
+  }
+
+  const handleCameraPhotoCapture = (imageDataUrl: string, file: File) => {
+    if (photos.length >= 4) {
+      setShowCameraModal(false)
+      return
+    }
+
+    setPhotos((prev) => [...prev, imageDataUrl].slice(0, 4))
+    setPhotoFiles((prev) => [...prev, file].slice(0, 4))
+    setShowCameraModal(false)
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -318,21 +335,38 @@ export function ReportIssueScreen() {
             </div>
           )}
 
-          {/* Camera button */}
-          <button
-            onClick={handlePhotoCapture}
-            disabled={photos.length >= 4}
-            className="flex min-h-30 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50"
-          >
-            <Camera className="h-10 w-10 text-primary" />
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-sm font-semibold text-foreground">{t("capturePhoto")}</span>
-              <span className="text-xs text-muted-foreground">{t("dragDropUpload")}</span>
-              <span className="text-xs text-muted-foreground">
-                {t("upTo4Photos")} ({photos.length}/4)
-              </span>
-            </div>
-          </button>
+          {/* Camera and Upload buttons */}
+          <div className="flex flex-col gap-3">
+            {cameraCaptureEnabled && (
+              <button
+                onClick={handleCameraCapture}
+                disabled={photos.length >= 4}
+                className="flex min-h-24 flex-col items-center justify-center gap-3 rounded-xl border-2 border-border bg-primary/5 p-6 transition-colors hover:border-primary hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Camera className="h-10 w-10 text-primary" />
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-sm font-semibold text-foreground">{t("takePhoto")}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t("upTo4Photos")} ({photos.length}/4)
+                  </span>
+                </div>
+              </button>
+            )}
+
+            <button
+              onClick={handlePhotoCapture}
+              disabled={photos.length >= 4}
+              className="flex min-h-24 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Upload className="h-10 w-10 text-primary" />
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-sm font-semibold text-foreground">{t("uploadFromGallery")}</span>
+                <span className="text-xs text-muted-foreground">
+                  {t("upTo4Photos")} ({photos.length}/4)
+                </span>
+              </div>
+            </button>
+          </div>
 
           <button
             onClick={handleNextFromPhotos}
@@ -594,6 +628,14 @@ export function ReportIssueScreen() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Camera Modal */}
+      {showCameraModal && (
+        <CameraCapture
+          onCapture={handleCameraPhotoCapture}
+          onClose={() => setShowCameraModal(false)}
+        />
       )}
     </div>
   )
