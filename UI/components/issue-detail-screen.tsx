@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useLanguage } from "@/lib/language-context"
 import type { Issue, Comment } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
@@ -17,8 +17,8 @@ import {
   ImageIcon,
 } from "lucide-react"
 import { getCategoryIcon, getSeverityColor, getStatusColor, getTimeAgo } from "@/lib/category-helpers"
-import { mockComments } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
+import { getComments, postComment, resolveVote } from "@/lib/api-client"
 
 interface IssueDetailScreenProps {
   issue: Issue
@@ -29,12 +29,45 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
   const { t } = useLanguage()
   const [upvotes, setUpvotes] = useState(issue.upvotes)
   const [hasUpvoted, setHasUpvoted] = useState(false)
-  const [comments, setComments] = useState<Comment[]>(
-    mockComments.filter((c) => c.issueId === issue.id)
-  )
+  const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState("")
-  const [resolveVotes, setResolveVotes] = useState({ yes: 1, no: 0 })
+  const [resolveVotes, setResolveVotes] = useState({
+    yes: issue.resolutionConfirmations || 0,
+    no: 0,
+  })
   const [hasVoted, setHasVoted] = useState(false)
+  const [voteSubmitting, setVoteSubmitting] = useState(false)
+  const [voteError, setVoteError] = useState<string | null>(null)
+  const [commentsLoading, setCommentsLoading] = useState(true)
+  const [commentSubmitting, setCommentSubmitting] = useState(false)
+  const [commentsError, setCommentsError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    const loadComments = async () => {
+      setCommentsLoading(true)
+      setCommentsError(null)
+      try {
+        const result = await getComments(issue.id)
+        if (!active) return
+        setComments(result)
+      } catch {
+        if (!active) return
+        setCommentsError("Unable to load comments")
+      } finally {
+        if (active) {
+          setCommentsLoading(false)
+        }
+      }
+    }
+
+    loadComments()
+
+    return () => {
+      active = false
+    }
+  }, [issue.id])
 
   const CategoryIcon = getCategoryIcon(issue.category)
   const totalVotes = resolveVotes.yes + resolveVotes.no
@@ -50,27 +83,41 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
     }
   }
 
-  const handleResolveVote = (vote: "yes" | "no") => {
-    if (hasVoted) return
-    setResolveVotes((prev) => ({
-      ...prev,
-      [vote]: prev[vote] + 1,
-    }))
-    setHasVoted(true)
+  const handleResolveVote = async (vote: "yes" | "no") => {
+    if (hasVoted || voteSubmitting) return
+
+    setVoteSubmitting(true)
+    setVoteError(null)
+
+    try {
+      const result = await resolveVote(issue.id, vote)
+      setResolveVotes({ yes: result.yes, no: result.no })
+      setHasVoted(true)
+      if (result.duplicate) {
+        setVoteError("Vote already submitted for this issue")
+      }
+    } catch {
+      setVoteError("Unable to submit vote right now")
+    } finally {
+      setVoteSubmitting(false)
+    }
   }
 
-  const handlePostComment = () => {
+  const handlePostComment = async () => {
     if (!newComment.trim()) return
-    const comment: Comment = {
-      id: `c-${Date.now()}`,
-      issueId: issue.id,
-      text: newComment.trim(),
-      author: "You",
-      isAnonymous: false,
-      createdAt: new Date().toISOString(),
+
+    setCommentSubmitting(true)
+    setCommentsError(null)
+
+    try {
+      const created = await postComment(issue.id, newComment.trim(), false)
+      setComments((prev) => [created, ...prev])
+      setNewComment("")
+    } catch {
+      setCommentsError("Unable to post comment")
+    } finally {
+      setCommentSubmitting(false)
     }
-    setComments((prev) => [comment, ...prev])
-    setNewComment("")
   }
 
   const severityLabel =
@@ -96,7 +143,7 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
         <div className="mx-auto flex h-12 max-w-5xl items-center gap-3 px-4">
           <button
             onClick={onBack}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-foreground transition-colors hover:bg-accent"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-accent"
             aria-label="Go back"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -184,7 +231,7 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
         <button
           onClick={handleUpvote}
           className={cn(
-            "flex min-h-[48px] items-center justify-center gap-2 rounded-xl border-2 px-6 py-3 text-sm font-semibold transition-all",
+            "flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 px-6 py-3 text-sm font-semibold transition-all",
             hasUpvoted
               ? "border-primary bg-primary text-primary-foreground"
               : "border-border bg-card text-foreground hover:border-primary/50 hover:bg-primary/5"
@@ -203,9 +250,9 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
             <div className="flex gap-3">
               <button
                 onClick={() => handleResolveVote("yes")}
-                disabled={hasVoted}
+                disabled={hasVoted || voteSubmitting}
                 className={cn(
-                  "flex flex-1 min-h-[44px] items-center justify-center gap-2 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all",
+                  "flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all",
                   hasVoted && resolveVotes.yes > 0
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border text-foreground hover:border-primary/50",
@@ -217,9 +264,9 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
               </button>
               <button
                 onClick={() => handleResolveVote("no")}
-                disabled={hasVoted}
+                disabled={hasVoted || voteSubmitting}
                 className={cn(
-                  "flex flex-1 min-h-[44px] items-center justify-center gap-2 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all",
+                  "flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all",
                   hasVoted && resolveVotes.no > 0
                     ? "border-destructive bg-destructive/10 text-destructive"
                     : "border-border text-foreground hover:border-destructive/50",
@@ -235,6 +282,9 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
                 {resolveVotes.yes} / 3 {t("confirmationsNeeded")}
               </p>
             </div>
+            {voteError && (
+              <p className="text-[10px] text-muted-foreground">{voteError}</p>
+            )}
           </div>
         )}
 
@@ -256,8 +306,8 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
             />
             <button
               onClick={handlePostComment}
-              disabled={!newComment.trim()}
-              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+              disabled={!newComment.trim() || commentSubmitting}
+              className="flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
               aria-label="Post comment"
             >
               <Send className="h-4 w-4" />
@@ -266,6 +316,14 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
 
           {/* Comment Bubbles */}
           <div className="flex flex-col gap-3">
+            {commentsLoading && (
+              <p className="text-xs text-muted-foreground">Loading comments...</p>
+            )}
+
+            {commentsError && (
+              <p className="text-xs text-muted-foreground">{commentsError}</p>
+            )}
+
             {comments.map((comment) => (
               <div
                 key={comment.id}
