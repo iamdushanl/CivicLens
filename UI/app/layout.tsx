@@ -1,18 +1,24 @@
-import type { Metadata, Viewport } from 'next'
-import { Inter, Noto_Sans_Sinhala, Noto_Sans_Tamil } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import { LanguageProvider } from '@/lib/language-context'
-import './globals.css'
+import type { Metadata, Viewport } from "next"
+import { Inter, Noto_Sans_Sinhala, Noto_Sans_Tamil } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
+import { LanguageProvider } from "@/lib/language-context"
+import { PWAInstallPrompt } from "@/components/pwa-install-prompt"
+import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const notoSinhala = Noto_Sans_Sinhala({ subsets: ["sinhala"], variable: "--font-sinhala", weight: ["400", "500", "600", "700"] })
 const notoTamil = Noto_Sans_Tamil({ subsets: ["tamil"], variable: "--font-tamil", weight: ["400", "500", "600", "700"] })
 
 export const metadata: Metadata = {
-  title: 'CivicLens — See Your City. Shape Its Future.',
+  title: 'CivicLens — See it. Report it. Fix it.',
   description: 'A civic issue reporting platform for Sri Lanka. Report potholes, broken street lights, garbage, and more. Available in English, Sinhala, and Tamil.',
   generator: 'v0.app',
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'CivicLens',
+  },
   icons: {
     icon: [
       {
@@ -28,7 +34,7 @@ export const metadata: Metadata = {
         type: 'image/svg+xml',
       },
     ],
-    apple: '/apple-icon.png',
+    apple: '/icon-192.png',
   },
 }
 
@@ -52,6 +58,7 @@ export default function RootLayout({
           {children}
         </LanguageProvider>
         <Analytics />
+        <PWAInstallPrompt />
       </body>
     </html>
   )
