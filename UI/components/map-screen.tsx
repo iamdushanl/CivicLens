@@ -1,62 +1,134 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
+import dynamic from "next/dynamic"
 import { useLanguage } from "@/lib/language-context"
 import { MapPin, Navigation } from "lucide-react"
-import { mockIssues } from "@/lib/mock-data"
 import { getCategoryIcon, getSeverityColor } from "@/lib/category-helpers"
 import { Badge } from "@/components/ui/badge"
+import type { Issue } from "@/lib/types"
+import { getIssues } from "@/lib/api-client"
+
+const LeafletIssuesMap = dynamic(
+  () => import("@/components/leaflet-issues-map").then((module) => module.LeafletIssuesMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full w-full items-center justify-center text-sm font-medium text-muted-foreground">
+        Loading map...
+      </div>
+    ),
+  }
+)
+
+const COLOMBO_CENTER: [number, number] = [6.9271, 79.8612]
+
+function distanceKm(a: [number, number], b: [number, number]): number {
+  const toRad = (d: number) => (d * Math.PI) / 180
+  const earthRadiusKm = 6371
+  const dLat = toRad(b[0] - a[0])
+  const dLon = toRad(b[1] - a[1])
+  const lat1 = toRad(a[0])
+  const lat2 = toRad(b[0])
+  const h =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2)
+  return 2 * earthRadiusKm * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h))
+}
 
 export function MapScreen() {
   const { t } = useLanguage()
+  const [allIssues, setAllIssues] = useState<Issue[]>([])
+  const [mapCenter, setMapCenter] = useState<[number, number]>(COLOMBO_CENTER)
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+  const [locating, setLocating] = useState(false)
+
+  useEffect(() => {
+    let active = true
+
+    const loadIssues = async () => {
+      const result = await getIssues({ sort: "upvotes" })
+      if (active) {
+        setAllIssues(result)
+      }
+    }
+
+    loadIssues()
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const nearbyIssues = useMemo(() => {
+    if (!userLocation) {
+      return allIssues.slice(0, 5)
+    }
+
+    return [...allIssues]
+      .filter((issue) => issue.coordinates)
+      .sort((a, b) => {
+        const aCoord: [number, number] = [a.coordinates!.lat, a.coordinates!.lng]
+        const bCoord: [number, number] = [b.coordinates!.lat, b.coordinates!.lng]
+        return distanceKm(userLocation, aCoord) - distanceKm(userLocation, bCoord)
+      })
+      .slice(0, 5)
+  }, [allIssues, userLocation])
+
+  const handleNearMe = () => {
+    if (!navigator.geolocation || locating) {
+      return
+    }
+
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nextCenter: [number, number] = [position.coords.latitude, position.coords.longitude]
+        setUserLocation(nextCenter)
+        setMapCenter(nextCenter)
+        setLocating(false)
+      },
+      () => {
+        setLocating(false)
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    )
+  }
+
+  const handleIssueSelect = (issueId: string) => {
+    const selected = allIssues.find((issue) => issue.id === issueId)
+    if (!selected?.coordinates) {
+      return
+    }
+    setMapCenter([selected.coordinates.lat, selected.coordinates.lng])
+  }
 
   return (
     <div className="flex flex-col gap-4 px-4 py-6">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-bold text-foreground">{t("map")}</h1>
-        <button className="flex min-h-[44px] items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent">
+        <button
+          onClick={handleNearMe}
+          className="flex min-h-11 items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+        >
           <Navigation className="h-3.5 w-3.5" />
-          {t("nearMe")}
+          {locating ? "Locating..." : t("nearMe")}
         </button>
       </div>
 
-      {/* Map placeholder */}
-      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl border border-border bg-muted">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_var(--color-primary)_1px,_transparent_1px)] bg-[length:24px_24px] opacity-5" />
-        {/* Simulated pins */}
-        <div className="absolute left-[30%] top-[35%]">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-destructive shadow-md">
-            <MapPin className="h-3 w-3 text-card" />
-          </div>
-        </div>
-        <div className="absolute left-[55%] top-[25%]">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-warning shadow-md">
-            <MapPin className="h-3 w-3 text-card" />
-          </div>
-        </div>
-        <div className="absolute left-[45%] top-[55%]">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary shadow-md">
-            <MapPin className="h-3 w-3 text-primary-foreground" />
-          </div>
-        </div>
-        <div className="absolute left-[70%] top-[45%]">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-destructive shadow-md">
-            <MapPin className="h-3 w-3 text-card" />
-          </div>
-        </div>
-        <div className="absolute left-[20%] top-[60%]">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-warning shadow-md">
-            <MapPin className="h-3 w-3 text-card" />
-          </div>
-        </div>
-        <p className="relative z-10 text-sm font-medium text-muted-foreground">
-          Interactive Map View
-        </p>
+      <div className="relative aspect-4/3 overflow-hidden rounded-xl border border-border bg-muted">
+        <LeafletIssuesMap
+          issues={allIssues}
+          center={mapCenter}
+          userLocation={userLocation}
+          onSelectIssue={handleIssueSelect}
+        />
       </div>
 
       {/* Nearby issues list */}
       <h2 className="text-sm font-semibold text-foreground">{t("nearMe")}</h2>
       <div className="flex flex-col gap-2">
-        {mockIssues.slice(0, 5).map((issue) => {
+        {nearbyIssues.map((issue) => {
           const CategoryIcon = getCategoryIcon(issue.category)
           const severityLabel =
             issue.severity === "low"
@@ -69,6 +141,7 @@ export function MapScreen() {
           return (
             <div
               key={issue.id}
+              onClick={() => handleIssueSelect(issue.id)}
               className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
             >
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">

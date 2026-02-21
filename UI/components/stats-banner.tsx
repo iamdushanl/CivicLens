@@ -1,7 +1,9 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useLanguage } from "@/lib/language-context"
 import { FileText, CheckCircle2, AlertCircle, TrendingUp } from "lucide-react"
+import { getStats } from "@/lib/api-client"
 
 const stats = [
   { key: "totalReports", value: "1,247", icon: FileText },
@@ -12,10 +14,37 @@ const stats = [
 
 export function StatsBanner() {
   const { t } = useLanguage()
+  const [values, setValues] = useState(stats)
+
+  useEffect(() => {
+    let active = true
+
+    const loadStats = async () => {
+      const result = await getStats()
+      if (!active) return
+
+      setValues([
+        { key: "totalReports", value: String(result.totalReports), icon: FileText },
+        { key: "resolvedThisWeek", value: String(result.resolvedThisWeek), icon: CheckCircle2 },
+        { key: "activeIssues", value: String(result.activeIssues), icon: AlertCircle },
+        {
+          key: "topCategory",
+          value: t(result.topCategory) === result.topCategory ? result.topCategory : t(result.topCategory),
+          icon: TrendingUp,
+        },
+      ])
+    }
+
+    loadStats()
+
+    return () => {
+      active = false
+    }
+  }, [t])
 
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      {stats.map((stat) => {
+      {values.map((stat) => {
         const Icon = stat.icon
         return (
           <div

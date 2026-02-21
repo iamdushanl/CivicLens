@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useLanguage } from "@/lib/language-context"
 import { StatsBanner } from "./stats-banner"
 import { IssueCard } from "./issue-card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { mockIssues } from "@/lib/mock-data"
 import type { Issue, IssueStatus } from "@/lib/types"
 import { ChevronDown } from "lucide-react"
+import { getIssues } from "@/lib/api-client"
 
 interface DashboardScreenProps {
   onIssueClick: (issue: Issue) => void
@@ -18,24 +18,42 @@ export function DashboardScreen({ onIssueClick }: DashboardScreenProps) {
   const [statusFilter, setStatusFilter] = useState<"all" | IssueStatus>("all")
   const [sortBy, setSortBy] = useState<"upvotes" | "recent" | "near">("upvotes")
   const [sortOpen, setSortOpen] = useState(false)
+  const [issues, setIssues] = useState<Issue[]>([])
+
+  useEffect(() => {
+    let active = true
+
+    const loadIssues = async () => {
+      const result = await getIssues()
+      if (active) {
+        setIssues(result)
+      }
+    }
+
+    loadIssues()
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   const filteredIssues = useMemo(() => {
-    let issues = [...mockIssues]
+    let nextIssues = [...issues]
 
     if (statusFilter !== "all") {
-      issues = issues.filter((i) => i.status === statusFilter)
+      nextIssues = nextIssues.filter((i) => i.status === statusFilter)
     }
 
     if (sortBy === "upvotes") {
-      issues.sort((a, b) => b.upvotes - a.upvotes)
+      nextIssues.sort((a, b) => b.upvotes - a.upvotes)
     } else if (sortBy === "recent") {
-      issues.sort(
+      nextIssues.sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
     }
 
-    return issues
-  }, [statusFilter, sortBy])
+    return nextIssues
+  }, [issues, statusFilter, sortBy])
 
   const sortLabel =
     sortBy === "upvotes"

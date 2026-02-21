@@ -1,7 +1,7 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useLanguage } from "@/lib/language-context"
-import { mockResolvedIssues } from "@/lib/mock-data"
 import { Badge } from "@/components/ui/badge"
 import {
   CheckCircle2,
@@ -14,10 +14,30 @@ import {
   ShieldCheck,
   ImageIcon,
 } from "lucide-react"
-import { getCategoryIcon, getTimeAgo } from "@/lib/category-helpers"
+import { getCategoryIcon } from "@/lib/category-helpers"
+import type { Issue } from "@/lib/types"
+import { getIssues } from "@/lib/api-client"
 
 export function ResolvedIssuesScreen() {
   const { t } = useLanguage()
+  const [resolvedIssues, setResolvedIssues] = useState<Issue[]>([])
+
+  useEffect(() => {
+    let active = true
+
+    const loadResolved = async () => {
+      const issues = await getIssues({ status: "resolved", sort: "recent" })
+      if (active) {
+        setResolvedIssues(issues)
+      }
+    }
+
+    loadResolved()
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   const getResolvedByIcon = (resolvedBy?: string) => {
     switch (resolvedBy) {
@@ -54,13 +74,13 @@ export function ResolvedIssuesScreen() {
         <div>
           <h1 className="text-lg font-bold text-foreground">{t("resolvedIssues")}</h1>
           <p className="text-xs text-muted-foreground">
-            {mockResolvedIssues.length} issues resolved
+            {resolvedIssues.length} issues resolved
           </p>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {mockResolvedIssues.map((issue) => {
+        {resolvedIssues.map((issue) => {
           const CategoryIcon = getCategoryIcon(issue.category)
           const ResolvedIcon = getResolvedByIcon(issue.resolvedBy)
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useLanguage } from "@/lib/language-context"
 import type { IssueCategory, Severity } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import { getCategoryIcon, getSeverityColor } from "@/lib/category-helpers"
 import { cn } from "@/lib/utils"
+import { createIssue } from "@/lib/api-client"
 
 const categories: { value: IssueCategory; labelKey: string }[] = [
   { value: "potholes", labelKey: "potholes" },
@@ -46,6 +47,7 @@ export function ReportIssueScreen() {
   const { t } = useLanguage()
   const [step, setStep] = useState(1)
   const [photos, setPhotos] = useState<string[]>([])
+  const [photoFiles, setPhotoFiles] = useState<File[]>([])
   const [analyzing, setAnalyzing] = useState(false)
   const [aiCategory, setAiCategory] = useState<IssueCategory>("potholes")
   const [aiConfidence, setAiConfidence] = useState(92)
@@ -56,8 +58,24 @@ export function ReportIssueScreen() {
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [detecting, setDetecting] = useState(false)
   const [locationDetected, setLocationDetected] = useState(false)
+  const [locationText, setLocationText] = useState("")
+  const [detectedCoords, setDetectedCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
+  const [reportId, setReportId] = useState("")
+  const [cameraCaptureEnabled, setCameraCaptureEnabled] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const userAgent = window.navigator.userAgent || ""
+    const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(userAgent)
+    const isSecure = window.isSecureContext
+
+    setCameraCaptureEnabled(isMobileDevice && isSecure)
+  }, [])
 
   const handlePhotoCapture = () => {
     fileInputRef.current?.click()
@@ -66,15 +84,23 @@ export function ReportIssueScreen() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files) return
+
+    const remainingSlots = 4 - photos.length
+    const selectedFiles = Array.from(files).slice(0, remainingSlots)
     const newPhotos: string[] = []
-    for (let i = 0; i < Math.min(files.length, 4 - photos.length); i++) {
-      newPhotos.push(URL.createObjectURL(files[i]))
+    for (const file of selectedFiles) {
+      newPhotos.push(URL.createObjectURL(file))
     }
+
+    setPhotoFiles((prev) => [...prev, ...selectedFiles].slice(0, 4))
     setPhotos((prev) => [...prev, ...newPhotos].slice(0, 4))
+
+    e.target.value = ""
   }
 
   const removePhoto = (index: number) => {
     setPhotos((prev) => prev.filter((_, i) => i !== index))
+    setPhotoFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
   const handleNextFromPhotos = () => {
@@ -90,18 +116,89 @@ export function ReportIssueScreen() {
   }
 
   const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationDetected(false)
+      return
+    }
+
     setDetecting(true)
-    setTimeout(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude
+        const lng = position.coords.longitude
+        setDetectedCoords({ lat, lng })
+        setLocationText(`${lat.toFixed(5)}, ${lng.toFixed(5)}`)
+        setDetecting(false)
+        setLocationDetected(true)
+      },
+      () => {
+        setDetecting(false)
+        setLocationDetected(false)
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    )
+  }
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+    setSubmitError(null)
+
+    try {
+      const fallbackReportId = `CL-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`
+      const finalTitle = title.trim() || t("reportIssue")
+      const finalDescription = description.trim() || t("description")
+      const finalLocation = locationText.trim() || (locationDetected ? "Detected location" : "Unknown location")
+
+      const formData = new FormData()
+      formData.append("title", finalTitle)
+      formData.append("description", finalDescription)
+      formData.append("category", aiCategory)
+      formData.append("severity", urgency)
+      formData.append("location", finalLocation)
+      formData.append("isAnonymous", String(isAnonymous))
+
+      if (detectedCoords) {
+        formData.append("lat", String(detectedCoords.lat))
+        formData.append("lng", String(detectedCoords.lng))
+      }
+
+      photoFiles.forEach((file) => {
+        formData.append("photos", file)
+      })
+
+      const createdIssue = await createIssue(formData)
+      setReportId(createdIssue.id || fallbackReportId)
+
+      if (typeof createdIssue.aiConfidence === "number") {
+        setAiConfidence(createdIssue.aiConfidence)
+      }
+
+      if (createdIssue.aiCategory) {
+        const normalized = String(createdIssue.aiCategory)
+        const categoryMap: Record<string, IssueCategory> = {
+          pothole: "potholes",
+          potholes: "potholes",
+          streetlight: "streetLights",
+          streetlights: "streetLights",
+          garbage: "garbage",
+          water: "waterSupply",
+          watersupply: "waterSupply",
+          tree: "publicSafety",
+          other: "other",
+        }
+        const mapped = categoryMap[normalized.toLowerCase()] || aiCategory
+        setAiCategory(mapped)
+      }
+
+      setSubmitted(true)
+    } catch (error) {
+      setSubmitError(t("reportIssue"))
+      setSubmitted(false)
+    } finally {
       setDetecting(false)
-      setLocationDetected(true)
-    }, 1500)
+      setIsSubmitting(false)
+    }
   }
-
-  const handleSubmit = () => {
-    setSubmitted(true)
-  }
-
-  const reportId = `CL-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`
 
   // Step indicators
   const StepIndicator = () => (
@@ -187,7 +284,7 @@ export function ReportIssueScreen() {
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
+            capture={cameraCaptureEnabled ? "environment" : undefined}
             multiple
             onChange={handleFileChange}
             className="hidden"
@@ -225,7 +322,7 @@ export function ReportIssueScreen() {
           <button
             onClick={handlePhotoCapture}
             disabled={photos.length >= 4}
-            className="flex min-h-[120px] flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50"
+            className="flex min-h-30 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50"
           >
             <Camera className="h-10 w-10 text-primary" />
             <div className="flex flex-col items-center gap-1">
@@ -239,7 +336,7 @@ export function ReportIssueScreen() {
 
           <button
             onClick={handleNextFromPhotos}
-            className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
             {t("next")}
             <ArrowRight className="h-4 w-4" />
@@ -318,14 +415,14 @@ export function ReportIssueScreen() {
           <div className="flex gap-3">
             <button
               onClick={() => setStep(1)}
-              className="flex flex-1 min-h-[48px] items-center justify-center gap-2 rounded-xl border-2 border-border px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+              className="flex flex-1 min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-border px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
             >
               <ArrowLeft className="h-4 w-4" />
               {t("back")}
             </button>
             <button
               onClick={() => setStep(3)}
-              className="flex flex-1 min-h-[48px] items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              className="flex flex-1 min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
               {t("next")}
               <ArrowRight className="h-4 w-4" />
@@ -375,7 +472,7 @@ export function ReportIssueScreen() {
                   key={s.value}
                   onClick={() => setUrgency(s.value)}
                   className={cn(
-                    "flex flex-1 min-h-[44px] items-center justify-center rounded-lg border-2 px-2 py-2 text-xs font-semibold transition-all",
+                    "flex flex-1 min-h-11 items-center justify-center rounded-lg border-2 px-2 py-2 text-xs font-semibold transition-all",
                     urgency === s.value
                       ? cn("border-transparent", getSeverityColor(s.value))
                       : "border-border text-foreground hover:border-primary/30"
@@ -399,14 +496,14 @@ export function ReportIssueScreen() {
           <div className="flex gap-3">
             <button
               onClick={() => setStep(2)}
-              className="flex flex-1 min-h-[48px] items-center justify-center gap-2 rounded-xl border-2 border-border px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+              className="flex flex-1 min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-border px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
             >
               <ArrowLeft className="h-4 w-4" />
               {t("back")}
             </button>
             <button
               onClick={() => setStep(4)}
-              className="flex flex-1 min-h-[48px] items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              className="flex flex-1 min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
               {t("next")}
               <ArrowRight className="h-4 w-4" />
@@ -423,7 +520,7 @@ export function ReportIssueScreen() {
           <button
             onClick={handleDetectLocation}
             disabled={detecting}
-            className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary/5 px-6 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 disabled:opacity-60"
+            className="flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary/5 px-6 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 disabled:opacity-60"
           >
             {detecting ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -444,6 +541,8 @@ export function ReportIssueScreen() {
             <label className="text-sm font-medium text-foreground">{t("manualAddress")}</label>
             <input
               type="text"
+              value={locationText}
+              onChange={(e) => setLocationText(e.target.value)}
               placeholder={t("manualAddress")}
               className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
@@ -462,20 +561,36 @@ export function ReportIssueScreen() {
             {t("locationPrivacy")}
           </p>
 
+          {submitError && (
+            <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              {submitError}
+            </p>
+          )}
+
           <div className="flex gap-3">
             <button
               onClick={() => setStep(3)}
-              className="flex flex-1 min-h-[48px] items-center justify-center gap-2 rounded-xl border-2 border-border px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+              className="flex flex-1 min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-border px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
             >
               <ArrowLeft className="h-4 w-4" />
               {t("back")}
             </button>
             <button
               onClick={handleSubmit}
-              className="flex flex-1 min-h-[48px] items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              disabled={isSubmitting}
+              className="flex flex-1 min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              {t("submit")}
-              <CheckCircle2 className="h-4 w-4" />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("submit")}
+                </>
+              ) : (
+                <>
+                  {t("submit")}
+                  <CheckCircle2 className="h-4 w-4" />
+                </>
+              )}
             </button>
           </div>
         </div>
