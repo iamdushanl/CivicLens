@@ -24,6 +24,7 @@ import {
 import { getCategoryIcon, getSeverityColor } from "@/lib/category-helpers"
 import { cn } from "@/lib/utils"
 import { createIssue } from "@/lib/api-client"
+import { CameraCapture } from "@/components/camera-capture"
 
 const categories: { value: IssueCategory; labelKey: string }[] = [
   { value: "potholes", labelKey: "potholes" },
@@ -65,20 +66,36 @@ export function ReportIssueScreen() {
   const [submitted, setSubmitted] = useState(false)
   const [reportId, setReportId] = useState("")
   const [cameraCaptureEnabled, setCameraCaptureEnabled] = useState(false)
+  const [showCameraModal, setShowCameraModal] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (typeof window === "undefined") return
 
-    const userAgent = window.navigator.userAgent || ""
-    const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(userAgent)
+    // Check if camera API is available
+    const hasCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
     const isSecure = window.isSecureContext
 
-    setCameraCaptureEnabled(isMobileDevice && isSecure)
+    setCameraCaptureEnabled(hasCamera && isSecure)
   }, [])
 
   const handlePhotoCapture = () => {
     fileInputRef.current?.click()
+  }
+
+  const handleCameraCapture = () => {
+    setShowCameraModal(true)
+  }
+
+  const handleCameraPhotoCapture = (imageDataUrl: string, file: File) => {
+    if (photos.length >= 4) {
+      setShowCameraModal(false)
+      return
+    }
+
+    setPhotos((prev) => [...prev, imageDataUrl].slice(0, 4))
+    setPhotoFiles((prev) => [...prev, file].slice(0, 4))
+    setShowCameraModal(false)
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -228,7 +245,7 @@ export function ReportIssueScreen() {
         </div>
       ))}
       <span className="ml-2 text-xs text-muted-foreground">
-        {t("step")} {step} {t("of")} 4
+        {t("report.step")} {step} {t("report.of")} 4
       </span>
     </div>
   )
@@ -243,19 +260,19 @@ export function ReportIssueScreen() {
           </div>
         </div>
         <div className="flex flex-col items-center gap-2 text-center">
-          <h2 className="text-2xl font-bold text-foreground">{t("reportSubmitted")}</h2>
+          <h2 className="text-2xl font-bold text-foreground">{t("report.reportSubmitted")}</h2>
           <p className="text-sm text-muted-foreground">
-            {t("reportId")}: <span className="font-mono font-semibold text-foreground">{reportId}</span>
+            {t("report.reportId")}: <span className="font-mono font-semibold text-foreground">{reportId}</span>
           </p>
         </div>
         <div className="flex gap-3">
           <button className="flex items-center gap-2 rounded-xl border-2 border-border bg-card px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent">
             <Share2 className="h-4 w-4" />
-            {t("share")}
+            {t("common.share")}
           </button>
           <button className="flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">
             <Map className="h-4 w-4" />
-            {t("viewOnMap")}
+            {t("report.viewOnMap")}
           </button>
         </div>
       </div>
@@ -266,7 +283,7 @@ export function ReportIssueScreen() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="text-sm font-medium text-foreground">{t("aiAnalyzing")}</p>
+        <p className="text-sm font-medium text-foreground">{t("report.analyzing")}</p>
       </div>
     )
   }
@@ -278,7 +295,7 @@ export function ReportIssueScreen() {
       {/* Step 1: Photo Capture */}
       {step === 1 && (
         <div className="flex flex-col gap-6">
-          <h2 className="text-lg font-bold text-foreground">{t("capturePhoto")}</h2>
+          <h2 className="text-lg font-bold text-foreground">{t("report.capturePhoto")}</h2>
 
           <input
             ref={fileInputRef}
@@ -318,27 +335,44 @@ export function ReportIssueScreen() {
             </div>
           )}
 
-          {/* Camera button */}
-          <button
-            onClick={handlePhotoCapture}
-            disabled={photos.length >= 4}
-            className="flex min-h-30 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50"
-          >
-            <Camera className="h-10 w-10 text-primary" />
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-sm font-semibold text-foreground">{t("capturePhoto")}</span>
-              <span className="text-xs text-muted-foreground">{t("dragDropUpload")}</span>
-              <span className="text-xs text-muted-foreground">
-                {t("upTo4Photos")} ({photos.length}/4)
-              </span>
-            </div>
-          </button>
+          {/* Camera and Upload buttons */}
+          <div className="flex flex-col gap-3">
+            {cameraCaptureEnabled && (
+              <button
+                onClick={handleCameraCapture}
+                disabled={photos.length >= 4}
+                className="flex min-h-24 flex-col items-center justify-center gap-3 rounded-xl border-2 border-border bg-primary/5 p-6 transition-colors hover:border-primary hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Camera className="h-10 w-10 text-primary" />
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-sm font-semibold text-foreground">{t("takePhoto")}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t("upTo4Photos")} ({photos.length}/4)
+                  </span>
+                </div>
+              </button>
+            )}
+
+            <button
+              onClick={handlePhotoCapture}
+              disabled={photos.length >= 4}
+              className="flex min-h-24 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Upload className="h-10 w-10 text-primary" />
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-sm font-semibold text-foreground">{t("report.uploadFromGallery")}</span>
+                <span className="text-xs text-muted-foreground">
+                  {t("report.upTo4Photos")} ({photos.length}/4)
+                </span>
+              </div>
+            </button>
+          </div>
 
           <button
             onClick={handleNextFromPhotos}
             className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            {t("next")}
+            {t("report.next")}
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
@@ -347,13 +381,13 @@ export function ReportIssueScreen() {
       {/* Step 2: AI Results */}
       {step === 2 && (
         <div className="flex flex-col gap-6">
-          <h2 className="text-lg font-bold text-foreground">{t("aiResults")}</h2>
+          <h2 className="text-lg font-bold text-foreground">{t("report.aiResults")}</h2>
 
           {/* AI Detected Category */}
           <div className="flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
             <div className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-primary" />
-              <span className="text-sm font-semibold text-foreground">{t("detectedCategory")}</span>
+              <span className="text-sm font-semibold text-foreground">{t("report.detectedCategory")}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
@@ -374,7 +408,7 @@ export function ReportIssueScreen() {
 
           {/* Override Category */}
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-semibold text-foreground">{t("overrideCategory")}</span>
+            <span className="text-sm font-semibold text-foreground">{t("report.overrideCategory")}</span>
             <div className="grid grid-cols-2 gap-2">
               {categories.map((cat) => {
                 const Icon = getCategoryIcon(cat.value)
@@ -399,17 +433,17 @@ export function ReportIssueScreen() {
 
           {/* Severity */}
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-semibold text-foreground">{t("severityScore")}</span>
+            <span className="text-sm font-semibold text-foreground">{t("report.severityScore")}</span>
             <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
               <div className="h-full w-[70%] rounded-full bg-warning" />
             </div>
-            <p className="text-xs text-muted-foreground">{t("severityExplanation")}: Moderate structural damage detected</p>
+            <p className="text-xs text-muted-foreground">{t("report.severityExplanation")}: Moderate structural damage detected</p>
           </div>
 
           {/* Duplicate Warning */}
           <div className="flex items-center gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2.5">
             <AlertTriangle className="h-4 w-4 text-warning-foreground" />
-            <span className="text-xs font-medium text-warning-foreground">{t("duplicateWarning")}</span>
+            <span className="text-xs font-medium text-warning-foreground">{t("report.duplicateWarning")}</span>
           </div>
 
           <div className="flex gap-3">
@@ -418,13 +452,13 @@ export function ReportIssueScreen() {
               className="flex flex-1 min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-border px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
             >
               <ArrowLeft className="h-4 w-4" />
-              {t("back")}
+              {t("report.back")}
             </button>
             <button
               onClick={() => setStep(3)}
               className="flex flex-1 min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              {t("next")}
+              {t("report.next")}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -434,30 +468,30 @@ export function ReportIssueScreen() {
       {/* Step 3: Details */}
       {step === 3 && (
         <div className="flex flex-col gap-6">
-          <h2 className="text-lg font-bold text-foreground">{t("description")}</h2>
+          <h2 className="text-lg font-bold text-foreground">{t("report.description")}</h2>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-foreground">{t("issueTitle")}</label>
+            <label className="text-sm font-medium text-foreground">{t("report.issueTitle")}</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder={t("issueTitle")}
+              placeholder={t("report.issueTitle")}
               className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground">{t("issueDescription")}</label>
+              <label className="text-sm font-medium text-foreground">{t("report.issueDescription")}</label>
               <span className="text-xs text-muted-foreground">
-                {500 - description.length} {t("charLimit")}
+                {500 - description.length} {t("report.charLimit")}
               </span>
             </div>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value.slice(0, 500))}
-              placeholder={t("issueDescription")}
+              placeholder={t("report.descriptionPlaceholder")}
               rows={4}
               className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none"
             />
@@ -465,7 +499,7 @@ export function ReportIssueScreen() {
 
           {/* Urgency selector */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-foreground">{t("urgency")}</label>
+            <label className="text-sm font-medium text-foreground">{t("report.urgency")}</label>
             <div className="flex gap-2">
               {severities.map((s) => (
                 <button
@@ -487,8 +521,8 @@ export function ReportIssueScreen() {
           {/* Anonymous Toggle */}
           <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
             <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium text-foreground">{t("anonymousToggle")}</span>
-              <span className="text-xs text-muted-foreground">{t("anonymousExplanation")}</span>
+              <span className="text-sm font-medium text-foreground">{t("report.anonymousToggle")}</span>
+              <span className="text-xs text-muted-foreground">{t("report.anonymousExplanation")}</span>
             </div>
             <Switch checked={isAnonymous} onCheckedChange={setIsAnonymous} />
           </div>
@@ -499,13 +533,13 @@ export function ReportIssueScreen() {
               className="flex flex-1 min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-border px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
             >
               <ArrowLeft className="h-4 w-4" />
-              {t("back")}
+              {t("report.back")}
             </button>
             <button
               onClick={() => setStep(4)}
               className="flex flex-1 min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              {t("next")}
+              {t("report.next")}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -515,7 +549,7 @@ export function ReportIssueScreen() {
       {/* Step 4: Location */}
       {step === 4 && (
         <div className="flex flex-col gap-6">
-          <h2 className="text-lg font-bold text-foreground">{t("location")}</h2>
+          <h2 className="text-lg font-bold text-foreground">{t("common.location")}</h2>
 
           <button
             onClick={handleDetectLocation}
@@ -527,7 +561,7 @@ export function ReportIssueScreen() {
             ) : (
               <MapPin className="h-5 w-5" />
             )}
-            {detecting ? "Detecting..." : t("detectMyLocation")}
+            {detecting ? t("report.detecting") : t("report.detectMyLocation")}
           </button>
 
           {locationDetected && (
@@ -538,12 +572,12 @@ export function ReportIssueScreen() {
           )}
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-foreground">{t("manualAddress")}</label>
+            <label className="text-sm font-medium text-foreground">{t("report.manualAddress")}</label>
             <input
               type="text"
               value={locationText}
               onChange={(e) => setLocationText(e.target.value)}
-              placeholder={t("manualAddress")}
+              placeholder={t("report.manualAddressPlaceholder")}
               className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
@@ -558,7 +592,7 @@ export function ReportIssueScreen() {
 
           {/* Privacy notice */}
           <p className="rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-            {t("locationPrivacy")}
+            {t("report.locationPrivacy")}
           </p>
 
           {submitError && (
@@ -573,7 +607,7 @@ export function ReportIssueScreen() {
               className="flex flex-1 min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-border px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
             >
               <ArrowLeft className="h-4 w-4" />
-              {t("back")}
+              {t("report.back")}
             </button>
             <button
               onClick={handleSubmit}
@@ -583,17 +617,25 @@ export function ReportIssueScreen() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  {t("submit")}
+                  {t("common.submit")}
                 </>
               ) : (
                 <>
-                  {t("submit")}
+                  {t("common.submit")}
                   <CheckCircle2 className="h-4 w-4" />
                 </>
               )}
             </button>
           </div>
         </div>
+      )}
+
+      {/* Camera Modal */}
+      {showCameraModal && (
+        <CameraCapture
+          onCapture={handleCameraPhotoCapture}
+          onClose={() => setShowCameraModal(false)}
+        />
       )}
     </div>
   )
