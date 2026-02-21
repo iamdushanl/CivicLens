@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
-import { type Language, translations } from "./i18n"
+import { type Language, translations, getNestedTranslation } from "./i18n"
 
 interface LanguageContextType {
   language: Language
@@ -49,7 +49,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const t = useCallback(
     (key: string) => {
-      return translations[language]?.[key] || translations.en[key] || key
+      const value = getNestedTranslation(translations[language], key)
+      if (value !== key) return value
+      
+      // Fallback to English
+      const fallback = getNestedTranslation(translations.en, key)
+      return fallback !== key ? fallback : key
     },
     [language]
   )
