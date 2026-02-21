@@ -1,0 +1,65 @@
+"use client"
+
+import { useState, useCallback } from "react"
+import { useLanguage } from "@/lib/language-context"
+import type { Issue } from "@/lib/types"
+import { TopNavbar } from "./top-navbar"
+import { BottomNav } from "./bottom-nav"
+import { DashboardScreen } from "./dashboard-screen"
+import { IssueDetailScreen } from "./issue-detail-screen"
+import { ReportIssueScreen } from "./report-issue-screen"
+import { EmergencyContactsScreen } from "./emergency-contacts-screen"
+import { ResolvedIssuesScreen } from "./resolved-issues-screen"
+import { MapScreen } from "./map-screen"
+
+export function AppShell() {
+  const { t } = useLanguage()
+  const [activeTab, setActiveTab] = useState("home")
+  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
+
+  const handleNavigate = useCallback((tab: string) => {
+    setActiveTab(tab)
+    setSelectedIssue(null)
+  }, [])
+
+  const handleIssueClick = useCallback((issue: Issue) => {
+    setSelectedIssue(issue)
+  }, [])
+
+  const handleBackFromDetail = useCallback(() => {
+    setSelectedIssue(null)
+  }, [])
+
+  const renderContent = () => {
+    // If viewing issue detail, show that instead
+    if (selectedIssue) {
+      return <IssueDetailScreen issue={selectedIssue} onBack={handleBackFromDetail} />
+    }
+
+    switch (activeTab) {
+      case "home":
+        return <DashboardScreen onIssueClick={handleIssueClick} />
+      case "report":
+        return <ReportIssueScreen />
+      case "map":
+        return <MapScreen />
+      case "contacts":
+        return <EmergencyContactsScreen />
+      case "menu":
+      case "resolved":
+        return <ResolvedIssuesScreen />
+      default:
+        return <DashboardScreen onIssueClick={handleIssueClick} />
+    }
+  }
+
+  return (
+    <div className="flex min-h-[100dvh] flex-col bg-background">
+      <TopNavbar onNavigate={handleNavigate} />
+      <main className="mx-auto w-full max-w-5xl flex-1 pb-20">
+        {renderContent()}
+      </main>
+      <BottomNav activeTab={activeTab} onTabChange={handleNavigate} />
+    </div>
+  )
+}
