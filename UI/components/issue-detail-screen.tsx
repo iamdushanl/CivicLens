@@ -122,19 +122,19 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
 
   const severityLabel =
     issue.severity === "low"
-      ? t("low")
+      ? t("report.low")
       : issue.severity === "medium"
-        ? t("medium")
+        ? t("report.medium")
         : issue.severity === "high"
-          ? t("high")
-          : t("critical")
+          ? t("report.high")
+          : t("report.critical")
 
   const statusLabel =
     issue.status === "open"
-      ? t("open")
+      ? t("issue.open")
       : issue.status === "in-progress"
-        ? t("inProgress")
-        : t("resolved")
+        ? t("issue.inProgress")
+        : t("issue.resolved")
 
   return (
     <div className="flex flex-col pb-20">
@@ -166,7 +166,7 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
           <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
             <Brain className="h-4 w-4 text-primary" />
             <span className="text-xs font-medium text-foreground">
-              {t("aiClassified")}: {issue.aiCategory} — {issue.aiConfidence}% {t("confidence")}
+              {t("issue.aiClassified")}: {issue.aiCategory} — {issue.aiConfidence}% {t("report.confidence")}
             </span>
           </div>
         )}
@@ -175,7 +175,7 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
         {issue.severityScore && (
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-foreground">{t("severityScore")}</span>
+              <span className="text-xs font-semibold text-foreground">{t("report.severityScore")}</span>
               <span className="text-xs font-bold text-foreground">{issue.severityScore}/10</span>
             </div>
             <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
@@ -238,14 +238,14 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
           )}
         >
           <ThumbsUp className={cn("h-5 w-5", hasUpvoted && "fill-current")} />
-          {t("upvote")} ({upvotes})
+          {t("issue.upvote")} ({upvotes})
         </button>
 
         {/* Resolution voting */}
         {issue.status !== "resolved" && (
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
             <h3 className="text-sm font-semibold text-foreground">
-              {t("hasThisBeenResolved")}
+              {t("issue.hasThisBeenResolved")}
             </h3>
             <div className="flex gap-3">
               <button
@@ -260,7 +260,7 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
                 )}
               >
                 <CheckCircle2 className="h-4 w-4" />
-                {t("yes")}
+                {t("common.yes")}
               </button>
               <button
                 onClick={() => handleResolveVote("no")}
@@ -273,13 +273,13 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
                   hasVoted && "cursor-default"
                 )}
               >
-                {t("no")}
+                {t("common.no")}
               </button>
             </div>
             <div className="flex flex-col gap-1">
               <Progress value={Math.min(resolveProgress, 100)} className="h-2" />
               <p className="text-[10px] text-muted-foreground">
-                {resolveVotes.yes} / 3 {t("confirmationsNeeded")}
+                {resolveVotes.yes} / 3 {t("issue.confirmationsNeeded")}
               </p>
             </div>
             {voteError && (
@@ -291,7 +291,7 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
         {/* Comments Section */}
         <div className="flex flex-col gap-4">
           <h3 className="text-sm font-semibold text-foreground">
-            {t("comments")} ({comments.length})
+            {t("issue.comments")} ({comments.length})
           </h3>
 
           {/* Comment Input */}
@@ -301,7 +301,7 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handlePostComment()}
-              placeholder={t("writeAComment")}
+              placeholder={t("issue.writeAComment")}
               className="flex-1 rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
             <button
@@ -332,7 +332,7 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
                     <User className="h-3 w-3" />
-                    {comment.isAnonymous ? t("anonymous") : comment.author}
+                    {comment.isAnonymous ? t("common.anonymous") : comment.author}
                   </div>
                   <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                     <Clock className="h-3 w-3" />
