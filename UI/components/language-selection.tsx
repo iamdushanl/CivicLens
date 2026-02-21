@@ -36,17 +36,9 @@ export function LanguageSelection() {
           <h1 className="text-4xl font-bold tracking-tight text-primary-foreground">
             CivicLens
           </h1>
-          <div className="flex flex-col items-center gap-1 text-center">
-            <p className="text-sm font-medium text-primary-foreground/80">
-              See Your City. Shape Its Future.
-            </p>
-            <p className="text-sm text-primary-foreground/60">
-              ඔබේ නගරය බලන්න. එහි අනාගතය හැඩගස්වන්න.
-            </p>
-            <p className="text-sm text-primary-foreground/60">
-              உங்கள் நகரத்தைப் பாருங்கள். அதன் எதிர்காலத்தை வடிவமையுங்கள்.
-            </p>
-          </div>
+          <p className="text-center text-sm font-medium text-primary-foreground/80">
+            See it. Report it. Fix it.
+          </p>
         </div>
 
         {/* Language buttons */}
@@ -66,7 +58,7 @@ export function LanguageSelection() {
 
         {/* Powered by */}
         <p className="text-center text-xs text-primary-foreground/50">
-          Powered by BCS Student Chapter — KDU
+          Powered by CodeCrushers.Ltd
         </p>
       </div>
     </div>

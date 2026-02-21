@@ -1,8 +1,8 @@
 {
   "appName": "CivicLens",
-  "tagline": "See Your City. Shape Its Future.",
-  "selectLanguage": "Select Your Language",
-  "poweredBy": "Powered by BCS Student Chapter — KDU",
+  "tagline": "See it. Report it. Fix it.",
+  "selectLanguage": "Choose your language",
+  "poweredBy": "Powered by CodeCrushers.Ltd",
   "home": "Home",
   "report": "Report",
   "map": "Map",
