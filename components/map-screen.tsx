@@ -110,19 +110,19 @@ export function MapScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-4 px-4 py-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold text-foreground">{t("nav.map")}</h1>
+    <div className="flex flex-col gap-5">
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="page-title">{t("nav.map")}</h1>
         <button
           onClick={handleNearMe}
-          className="flex min-h-11 items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+          className="flex min-h-11 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
         >
           <Navigation className="h-3.5 w-3.5" />
           {locating ? t("map.locating") : t("dashboard.nearMe")}
         </button>
       </div>
 
-      <div className="relative aspect-4/3 overflow-hidden rounded-xl border border-border bg-muted">
+      <div className="section-card relative aspect-4/3 overflow-hidden bg-muted">
         <LeafletIssuesMap
           issues={allIssues}
           center={mapCenter}
@@ -148,7 +148,7 @@ export function MapScreen() {
             <div
               key={issue.id}
               onClick={() => handleIssueClick(issue.id)}
-              className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 cursor-pointer transition-colors hover:bg-accent"
+              className="section-card flex cursor-pointer items-center gap-3 p-3 transition-colors hover:bg-accent"
             >
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                 <CategoryIcon className="h-4 w-4 text-primary" />

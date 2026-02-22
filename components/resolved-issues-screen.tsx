@@ -66,13 +66,13 @@ export function ResolvedIssuesScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
           <CheckCircle2 className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-lg font-bold text-foreground">{t("resolvedIssues")}</h1>
+          <h1 className="page-title">{t("resolvedIssues")}</h1>
           <p className="text-xs text-muted-foreground">
             {resolvedIssues.length} issues resolved
           </p>
@@ -87,7 +87,7 @@ export function ResolvedIssuesScreen() {
           return (
             <article
               key={issue.id}
-              className="relative flex flex-col gap-3 overflow-hidden rounded-xl border border-primary/20 bg-card p-4 shadow-sm"
+              className="section-card relative flex flex-col gap-3 overflow-hidden border-primary/20 p-4 shadow-sm"
             >
               {/* Celebration corner accent */}
               <div className="absolute -right-3 -top-3 h-16 w-16 rounded-full bg-primary/10" />

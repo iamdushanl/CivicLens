@@ -87,19 +87,19 @@ export function DashboardScreen({ onIssueClick }: DashboardScreenProps) {
   ]
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-6 pb-24">
+    <div className="flex flex-col gap-6">
       {/* Title & Subtitle */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold text-foreground">{t("dashboard.title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("dashboard.subtitle")}</p>
+        <h1 className="page-title">{t("dashboard.title")}</h1>
+        <p className="page-subtitle">{t("dashboard.subtitle")}</p>
       </div>
 
       {/* Stats */}
       <StatsBanner />
 
       {/* Issues Section */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
+      <section className="section-card p-4 sm:p-5">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-bold text-foreground">
             {t("dashboard.filters")}
           </h2>
@@ -110,7 +110,7 @@ export function DashboardScreen({ onIssueClick }: DashboardScreenProps) {
             <div className="relative">
               <button
                 onClick={() => setCategoryOpen(!categoryOpen)}
-                className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
                 aria-label={`${t("category")}: ${categoryLabel}`}
               >
                 <Filter className="h-3 w-3" />
@@ -120,7 +120,7 @@ export function DashboardScreen({ onIssueClick }: DashboardScreenProps) {
               {categoryOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setCategoryOpen(false)} />
-                  <div className="absolute right-0 top-full z-50 mt-1 min-w-[160px] max-h-[300px] overflow-y-auto overflow-hidden rounded-lg border border-border bg-card shadow-lg">
+                  <div className="absolute right-0 top-full z-50 mt-1 max-h-[300px] min-w-[160px] overflow-hidden overflow-y-auto rounded-lg border border-border bg-card shadow-lg">
                     {categories.map((cat) => (
                       <button
                         key={cat}
@@ -146,7 +146,7 @@ export function DashboardScreen({ onIssueClick }: DashboardScreenProps) {
             <div className="relative">
               <button
                 onClick={() => setSortOpen(!sortOpen)}
-                className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
                 aria-label={`${t("sort")}: ${sortLabel}`}
               >
                 {sortLabel}
@@ -187,7 +187,7 @@ export function DashboardScreen({ onIssueClick }: DashboardScreenProps) {
         <Tabs
           value={statusFilter}
           onValueChange={(val) => setStatusFilter(val as "all" | IssueStatus)}
-          className="mt-4"
+          className="mt-3"
         >
           <TabsList className="w-full grid grid-cols-4">
             <TabsTrigger value="all" className="text-xs">

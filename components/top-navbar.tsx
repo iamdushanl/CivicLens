@@ -48,8 +48,8 @@ export function TopNavbar({ onNavigate }: TopNavbarProps) {
   const [langOpen, setLangOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md">
+      <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-4">
         {/* Logo */}
         <button
           onClick={() => onNavigate("home")}
@@ -59,7 +59,7 @@ export function TopNavbar({ onNavigate }: TopNavbarProps) {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <Eye className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold text-foreground">CivicLens</span>
+          <span className="text-base font-semibold tracking-tight text-foreground sm:text-lg">CivicLens</span>
         </button>
 
         <div className="flex items-center gap-1">
@@ -83,7 +83,7 @@ export function TopNavbar({ onNavigate }: TopNavbarProps) {
                         setLanguage(opt.code)
                         setLangOpen(false)
                       }}
-                      className={`flex w-full min-w-[56px] items-center justify-center px-4 py-2.5 text-sm font-medium transition-colors ${
+                      className={`flex w-full min-w-[60px] items-center justify-center px-4 py-2.5 text-sm font-medium transition-colors ${
                         language === opt.code
                           ? "bg-primary text-primary-foreground"
                           : "text-foreground hover:bg-accent"

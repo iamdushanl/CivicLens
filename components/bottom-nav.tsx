@@ -22,11 +22,11 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-md"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur-md"
       role="tablist"
       aria-label="Main navigation"
     >
-      <div className="mx-auto flex max-w-lg items-center justify-around px-2 py-1">
+      <div className="mx-auto flex w-full max-w-5xl items-center justify-around px-2 py-1.5">
         {navItems.map((item) => {
           const isActive = activeTab === item.id
           const Icon = item.icon
@@ -39,7 +39,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
               className={cn(
                 "flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-1.5 transition-colors",
                 isActive
-                  ? "text-primary"
+                  ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >

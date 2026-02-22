@@ -137,24 +137,24 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
         : t("issue.resolved")
 
   return (
-    <div className="flex flex-col pb-20">
-      {/* Back header */}
-      <div className="sticky top-14 z-30 border-b border-border bg-card/95 backdrop-blur-md">
-        <div className="mx-auto flex h-12 max-w-5xl items-center gap-3 px-4">
-          <button
-            onClick={onBack}
-            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-accent"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-sm font-semibold text-foreground line-clamp-1">{issue.title}</h1>
+    <div className="flex flex-col gap-6">
+      {/* Back button + Title */}
+      <div className="flex items-start gap-3">
+        <button
+          onClick={onBack}
+          className="mt-1 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-accent"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div className="flex-1">
+          <h1 className="page-title line-clamp-2">{issue.title}</h1>
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">
+      <div className="flex w-full flex-col gap-6">
         {/* Photo placeholder */}
-        <div className="flex aspect-video items-center justify-center rounded-xl border border-border bg-muted">
+        <div className="section-card flex aspect-video items-center justify-center bg-muted">
           <div className="flex flex-col items-center gap-2 text-muted-foreground">
             <ImageIcon className="h-10 w-10" />
             <span className="text-xs font-medium">Issue Photo</span>
@@ -214,13 +214,13 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
         </div>
 
         {/* Location */}
-        <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-3">
+        <div className="section-card flex items-center gap-2 bg-muted/50 px-3 py-3">
           <MapPin className="h-4 w-4 text-primary" />
           <span className="text-sm text-foreground">{issue.location}</span>
         </div>
 
         {/* Map snippet placeholder */}
-        <div className="flex h-32 items-center justify-center rounded-xl border border-border bg-muted">
+        <div className="section-card flex h-32 items-center justify-center bg-muted">
           <div className="flex items-center gap-2 text-muted-foreground">
             <MapPin className="h-5 w-5" />
             <span className="text-xs font-medium">Map Preview</span>
@@ -243,7 +243,7 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
 
         {/* Resolution voting */}
         {issue.status !== "resolved" && (
-          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
+          <div className="section-card flex flex-col gap-3 p-4">
             <h3 className="text-sm font-semibold text-foreground">
               {t("issue.hasThisBeenResolved")}
             </h3>
@@ -302,7 +302,7 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handlePostComment()}
               placeholder={t("issue.writeAComment")}
-              className="flex-1 rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="flex-1 rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
             <button
               onClick={handlePostComment}
@@ -327,7 +327,7 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
             {comments.map((comment) => (
               <div
                 key={comment.id}
-                className="flex flex-col gap-1 rounded-xl border border-border bg-muted/30 px-4 py-3"
+                className="section-card flex flex-col gap-1 bg-muted/30 px-4 py-3"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">

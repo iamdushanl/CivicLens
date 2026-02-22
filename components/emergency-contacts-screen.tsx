@@ -50,7 +50,12 @@ export function EmergencyContactsScreen() {
   }, [activeCategory, search])
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-6">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="page-title">{t("emergencyContacts")}</h1>
+        <p className="page-subtitle">{t("nationalHotlines")}</p>
+      </div>
+
       {/* Search Bar */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -59,7 +64,7 @@ export function EmergencyContactsScreen() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t("searchByDistrict")}
-          className="w-full rounded-xl border border-border bg-card py-3 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full rounded-xl border border-border bg-background py-3 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
         />
       </div>
 
@@ -81,7 +86,7 @@ export function EmergencyContactsScreen() {
               <a
                 key={hotline.number}
                 href={`tel:${hotline.number}`}
-                className="flex min-w-[100px] flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 shadow-sm transition-colors hover:border-primary/30 hover:bg-primary/5"
+                className="section-card flex min-w-[100px] flex-col items-center gap-2 p-3 shadow-sm transition-colors hover:border-primary/30 hover:bg-primary/5"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
                   <Icon className="h-5 w-5 text-destructive" />
@@ -113,7 +118,7 @@ export function EmergencyContactsScreen() {
             {filteredContacts.map((contact) => (
               <article
                 key={contact.id}
-                className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm"
+                className="section-card flex flex-col gap-2 p-4 shadow-sm"
               >
                 <div className="flex items-start justify-between">
                   <h3 className="text-sm font-semibold text-foreground leading-snug">

@@ -252,7 +252,7 @@ export function ReportIssueScreen() {
 
   if (submitted) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 px-4 py-12">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6">
         <div className="relative flex h-20 w-20 items-center justify-center">
           <div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
           <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary">
@@ -281,7 +281,7 @@ export function ReportIssueScreen() {
 
   if (analyzing) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
         <p className="text-sm font-medium text-foreground">{t("report.analyzing")}</p>
       </div>
@@ -289,7 +289,7 @@ export function ReportIssueScreen() {
   }
 
   return (
-    <div className="flex flex-col px-4 pb-24">
+    <div className="flex flex-col">
       <StepIndicator />
 
       {/* Step 1: Photo Capture */}
@@ -341,7 +341,7 @@ export function ReportIssueScreen() {
               <button
                 onClick={handleCameraCapture}
                 disabled={photos.length >= 4}
-                className="flex min-h-24 flex-col items-center justify-center gap-3 rounded-xl border-2 border-border bg-primary/5 p-6 transition-colors hover:border-primary hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="section-card flex min-h-24 flex-col items-center justify-center gap-3 border-2 bg-primary/5 p-6 transition-colors hover:border-primary hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Camera className="h-10 w-10 text-primary" />
                 <div className="flex flex-col items-center gap-1">
@@ -477,7 +477,7 @@ export function ReportIssueScreen() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("report.issueTitle")}
-              className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
 
@@ -493,7 +493,7 @@ export function ReportIssueScreen() {
               onChange={(e) => setDescription(e.target.value.slice(0, 500))}
               placeholder={t("report.descriptionPlaceholder")}
               rows={4}
-              className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+              className="resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
 
@@ -519,7 +519,7 @@ export function ReportIssueScreen() {
           </div>
 
           {/* Anonymous Toggle */}
-          <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
+          <div className="section-card flex items-center justify-between px-4 py-3">
             <div className="flex flex-col gap-0.5">
               <span className="text-sm font-medium text-foreground">{t("report.anonymousToggle")}</span>
               <span className="text-xs text-muted-foreground">{t("report.anonymousExplanation")}</span>
@@ -578,7 +578,7 @@ export function ReportIssueScreen() {
               value={locationText}
               onChange={(e) => setLocationText(e.target.value)}
               placeholder={t("report.manualAddressPlaceholder")}
-              className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
 
