@@ -31,32 +31,23 @@ export function AppShell() {
   }, [])
 
   const renderContent = () => {
-    // If viewing issue detail, show that instead
     if (selectedIssue) {
       return <IssueDetailScreen issue={selectedIssue} onBack={handleBackFromDetail} />
     }
-
     switch (activeTab) {
-      case "home":
-        return <DashboardScreen onIssueClick={handleIssueClick} />
-      case "report":
-        return <ReportIssueScreen />
-      case "map":
-        return <MapScreen />
-      case "contacts":
-        return <EmergencyContactsScreen />
-      case "menu":
-      case "resolved":
-        return <ResolvedIssuesScreen />
-      default:
-        return <DashboardScreen onIssueClick={handleIssueClick} />
+      case "home": return <DashboardScreen onIssueClick={handleIssueClick} />
+      case "report": return <ReportIssueScreen />
+      case "map": return <MapScreen />
+      case "contacts": return <EmergencyContactsScreen />
+      case "resolved": return <ResolvedIssuesScreen />
+      default: return <DashboardScreen onIssueClick={handleIssueClick} />
     }
   }
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background">
       <TopNavbar onNavigate={handleNavigate} />
-      <main className="mx-auto w-full max-w-5xl flex-1 pb-20">
+      <main className="mx-auto w-full max-w-5xl flex-1 pb-24">
         {renderContent()}
       </main>
       <BottomNav activeTab={activeTab} onTabChange={handleNavigate} />
