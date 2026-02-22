@@ -25,6 +25,12 @@
     "mostRecent": "ඉතින්",
     "nearMe": "මා ළඟ"
   },
+  "map": {
+    "title": "ගැටලු සිතියම",
+    "locating": "ස්ථානය හොදනවා...",
+    "nearbyIssues": "අසල ගැටලු",
+    "loadingMap": "සිතියම බර වෙනවා..."
+  },
   "report": {
     "title": "ගැටලුවක් වාර්තා කරන්න",
     "step1": "ඡායාරූපය ගන්න හෝ උඩුගු කරන්න",
@@ -90,8 +96,9 @@
     "comment": "ටිප්පනිය",
     "resolve": "විසඳීම",
     "resolved": "විසඳිණි",
-    "inProgress": "ප්‍රගතිය අතරතුර",
-    "hasThisBeenResolved": "මෙම ගැටලුව විසුරුවා ඇතිද?",
+    "inProgress": "ප්‍රගතිය අතරතුර",    "open": "විවෘත",
+    "aiClassified": "AI වර්ගීකරණය කරන ලදී",
+    "writeAComment": "ටිප්පණියක් ලියන්න...",    "hasThisBeenResolved": "මෙම ගැටලුව විසුරුවා ඇතිද?",
     "confirmationsNeeded": "ප්‍රජා සනාථයි විසඳිණි",
     "yesItsFixed": "✅ ඔව්, එය ඒ විසඳී ඇත",
     "stillAnIssue": "❌ තවම ගැටලු",

@@ -25,6 +25,12 @@
     "mostRecent": "Most Recent",
     "nearMe": "Near Me"
   },
+  "map": {
+    "title": "Issue Map",
+    "locating": "Locating...",
+    "nearbyIssues": "Nearby Issues",
+    "loadingMap": "Loading map..."
+  },
   "report": {
     "title": "Report an Issue",
     "step1": "Take or Upload Photo",
@@ -91,6 +97,9 @@
     "resolve": "Resolve",
     "resolved": "Resolved",
     "inProgress": "In Progress",
+    "open": "Open",
+    "aiClassified": "AI Classified",
+    "writeAComment": "Write a comment...",
     "hasThisBeenResolved": "Has this issue been resolved?",
     "confirmationsNeeded": "community confirmations to mark resolved",
     "yesItsFixed": "✅ Yes, it's fixed",

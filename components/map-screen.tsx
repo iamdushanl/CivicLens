@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
+import { useRouter } from "next/navigation"
 import { useLanguage } from "@/lib/language-context"
 import { MapPin, Navigation } from "lucide-react"
 import { getCategoryIcon, getSeverityColor } from "@/lib/category-helpers"
@@ -37,7 +38,8 @@ function distanceKm(a: [number, number], b: [number, number]): number {
 }
 
 export function MapScreen() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
+  const router = useRouter()
   const [allIssues, setAllIssues] = useState<Issue[]>([])
   const [mapCenter, setMapCenter] = useState<[number, number]>(COLOMBO_CENTER)
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
@@ -103,16 +105,20 @@ export function MapScreen() {
     setMapCenter([selected.coordinates.lat, selected.coordinates.lng])
   }
 
+  const handleIssueClick = (issueId: string) => {
+    router.push(`/${language}/issue/${issueId}`)
+  }
+
   return (
     <div className="flex flex-col gap-4 px-4 py-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold text-foreground">{t("map")}</h1>
+        <h1 className="text-lg font-bold text-foreground">{t("nav.map")}</h1>
         <button
           onClick={handleNearMe}
           className="flex min-h-11 items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
         >
           <Navigation className="h-3.5 w-3.5" />
-          {locating ? "Locating..." : t("nearMe")}
+          {locating ? t("map.locating") : t("dashboard.nearMe")}
         </button>
       </div>
 
@@ -126,23 +132,23 @@ export function MapScreen() {
       </div>
 
       {/* Nearby issues list */}
-      <h2 className="text-sm font-semibold text-foreground">{t("nearMe")}</h2>
+      <h2 className="text-sm font-semibold text-foreground">{t("map.nearbyIssues")}</h2>
       <div className="flex flex-col gap-2">
         {nearbyIssues.map((issue) => {
           const CategoryIcon = getCategoryIcon(issue.category)
           const severityLabel =
             issue.severity === "low"
-              ? t("low")
+              ? t("report.low")
               : issue.severity === "medium"
-                ? t("medium")
+                ? t("report.medium")
                 : issue.severity === "high"
-                  ? t("high")
-                  : t("critical")
+                  ? t("report.high")
+                  : t("report.critical")
           return (
             <div
               key={issue.id}
-              onClick={() => handleIssueSelect(issue.id)}
-              className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
+              onClick={() => handleIssueClick(issue.id)}
+              className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 cursor-pointer transition-colors hover:bg-accent"
             >
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                 <CategoryIcon className="h-4 w-4 text-primary" />

@@ -87,8 +87,12 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+
+# Load environment variables from .env file
+load_dotenv()
 
 try:
     from supabase import create_client
