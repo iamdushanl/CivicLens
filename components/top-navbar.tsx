@@ -2,26 +2,17 @@
 
 import { useLanguage } from "@/lib/language-context"
 import type { Language } from "@/lib/i18n"
-import { Eye, Globe, Menu, X, Sparkles } from "lucide-react"
+import { Eye, Globe, Menu, Sparkles, Sun, Moon, UserX, Home, AlertTriangle, CheckCircle2, Phone, Info, FileWarning, BarChart2 } from "lucide-react"
 import {
   Sheet,
   SheetTrigger,
   SheetContent,
-  SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Switch } from "@/components/ui/switch"
-import {
-  Home,
-  AlertTriangle,
-  CheckCircle2,
-  Phone,
-  Info,
-  UserX,
-  FileWarning,
-} from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
+import { NotificationBell, NotificationPanel } from "@/components/notification-panel"
 
 interface TopNavbarProps {
   onNavigate: (tab: string) => void
@@ -30,9 +21,9 @@ interface TopNavbarProps {
 const menuItems = [
   { id: "home", icon: Home, labelKey: "home", gradient: "from-violet-500 to-indigo-500" },
   { id: "report", icon: FileWarning, labelKey: "reportAnIssue", gradient: "from-rose-500 to-pink-500" },
-  { id: "priority", icon: AlertTriangle, labelKey: "priorityIssues", gradient: "from-amber-500 to-orange-500" },
+  { id: "analytics", icon: BarChart2, labelKey: "analytics", gradient: "from-sky-500 to-cyan-500" },
   { id: "resolved", icon: CheckCircle2, labelKey: "resolvedIssues", gradient: "from-emerald-500 to-teal-500" },
-  { id: "contacts", icon: Phone, labelKey: "emergencyContacts", gradient: "from-sky-500 to-cyan-500" },
+  { id: "contacts", icon: Phone, labelKey: "emergencyContacts", gradient: "from-amber-500 to-orange-500" },
   { id: "about", icon: Info, labelKey: "about", gradient: "from-slate-500 to-gray-500" },
 ]
 
@@ -47,6 +38,23 @@ export function TopNavbar({ onNavigate }: TopNavbarProps) {
   const [anonymousMode, setAnonymousMode] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
+  const [notifOpen, setNotifOpen] = useState(false)
+
+  // GAP 13 — Dark mode toggle
+  const [dark, setDark] = useState(false)
+  useEffect(() => {
+    const stored = localStorage.getItem("cl_dark_mode")
+    if (stored === "true" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      document.documentElement.classList.add("dark")
+      setDark(true)
+    }
+  }, [])
+  const toggleDark = () => {
+    const next = !dark
+    setDark(next)
+    document.documentElement.classList.toggle("dark", next)
+    localStorage.setItem("cl_dark_mode", String(next))
+  }
 
   return (
     <header className="sticky top-0 z-40 glass border-b border-border/60">
@@ -70,6 +78,9 @@ export function TopNavbar({ onNavigate }: TopNavbarProps) {
         </button>
 
         <div className="flex items-center gap-1">
+          {/* GAP 2 — Notification Bell */}
+          <NotificationBell onClick={() => setNotifOpen(true)} />
+          {notifOpen && <NotificationPanel onClose={() => setNotifOpen(false)} />}
           {/* Language Switcher */}
           <div className="relative">
             <button
@@ -180,25 +191,34 @@ export function TopNavbar({ onNavigate }: TopNavbarProps) {
                   )
                 })}
 
-                {/* Anonymous Mode Toggle */}
-                <div className="mt-3 border-t border-border/60 pt-4">
+                {/* Settings Toggles */}
+                <div className="mt-3 flex flex-col gap-2 border-t border-border/60 pt-4">
+                  {/* Anonymous Mode */}
                   <div className="flex items-center justify-between rounded-xl bg-muted/60 px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-500/10">
                         <UserX className="h-4 w-4 text-slate-500" />
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-medium text-foreground">
-                          {t("anonymousMode")}
-                        </span>
+                        <span className="text-sm font-medium text-foreground">{t("anonymousMode")}</span>
                         <span className="text-[10px] text-muted-foreground">Hide your identity</span>
                       </div>
                     </div>
-                    <Switch
-                      checked={anonymousMode}
-                      onCheckedChange={setAnonymousMode}
-                      aria-label="Toggle anonymous mode"
-                    />
+                    <Switch checked={anonymousMode} onCheckedChange={setAnonymousMode} aria-label="Toggle anonymous mode" />
+                  </div>
+
+                  {/* GAP 13 — Dark Mode Toggle */}
+                  <div className="flex items-center justify-between rounded-xl bg-muted/60 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10">
+                        {dark ? <Moon className="h-4 w-4 text-indigo-500" /> : <Sun className="h-4 w-4 text-amber-500" />}
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-sm font-medium text-foreground">Dark Mode</span>
+                        <span className="text-[10px] text-muted-foreground">{dark ? "Currently dark" : "Currently light"}</span>
+                      </div>
+                    </div>
+                    <Switch checked={dark} onCheckedChange={toggleDark} aria-label="Toggle dark mode" />
                   </div>
                 </div>
               </nav>

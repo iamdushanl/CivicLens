@@ -24,8 +24,10 @@ import {
 } from "lucide-react"
 import { getCategoryIcon, getSeverityColor } from "@/lib/category-helpers"
 import { cn } from "@/lib/utils"
-import { createIssue } from "@/lib/api-client"
+import { createIssue, getIssues } from "@/lib/api-client"
 import { CameraCapture } from "@/components/camera-capture"
+import { saveReportDraft, getReportDraft, clearReportDraft } from "@/lib/local-store"
+import type { Issue } from "@/lib/types"
 
 const categories: { value: IssueCategory; labelKey: string; gradient: string }[] = [
   { value: "potholes", labelKey: "potholes", gradient: "from-orange-500 to-amber-500" },
@@ -70,6 +72,9 @@ export function ReportIssueScreen() {
   const [reportId, setReportId] = useState("")
   const [cameraCaptureEnabled, setCameraCaptureEnabled] = useState(false)
   const [showCameraModal, setShowCameraModal] = useState(false)
+  const [draftRestored, setDraftRestored] = useState(false)
+  const [duplicates, setDuplicates] = useState<Issue[]>([])
+  const [showDupWarning, setShowDupWarning] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -77,7 +82,25 @@ export function ReportIssueScreen() {
     const hasCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
     const isSecure = window.isSecureContext
     setCameraCaptureEnabled(hasCamera && isSecure)
+
+    // GAP 16 — Restore offline draft
+    const draft = getReportDraft()
+    if (draft && !draftRestored) {
+      setTitle(draft.title)
+      setDescription(draft.description)
+      setLocationText(draft.locationText)
+      setIsAnonymous(draft.isAnonymous)
+      if (draft.urgency) setUrgency(draft.urgency as Severity)
+      setDraftRestored(true)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // GAP 16 — Auto-save draft on key field changes
+  useEffect(() => {
+    if (submitted) return
+    saveReportDraft({ step, title, description, category: aiCategory, urgency, locationText, isAnonymous })
+  }, [step, title, description, aiCategory, urgency, locationText, isAnonymous, submitted])
 
   const handlePhotoCapture = () => fileInputRef.current?.click()
   const handleCameraCapture = () => setShowCameraModal(true)
@@ -108,6 +131,19 @@ export function ReportIssueScreen() {
     if (photos.length === 0) setPhotos(["demo"])
     setAnalyzing(true)
     setTimeout(() => { setAnalyzing(false); setStep(2) }, 2000)
+  }
+
+  // GAP 8 — Duplicate detection: check same category, open status
+  const handleNextToLocation = async () => {
+    try {
+      const all = await getIssues()
+      const dups = all.filter((i) => i.category === aiCategory && i.status !== "resolved")
+      setDuplicates(dups)
+      if (dups.length > 0) setShowDupWarning(true)
+    } catch {
+      // ignore
+    }
+    setStep(4)
   }
 
   const handleDetectLocation = () => {
@@ -150,6 +186,7 @@ export function ReportIssueScreen() {
         }
         setAiCategory(map[String(created.aiCategory).toLowerCase()] || aiCategory)
       }
+      clearReportDraft() // GAP 16 — clear draft after successful submit
       setSubmitted(true)
     } catch {
       setSubmitError(t("reportIssue"))
@@ -518,7 +555,7 @@ export function ReportIssueScreen() {
               <ArrowLeft className="h-4 w-4" />
               {t("report.back")}
             </button>
-            <button onClick={() => setStep(4)} className="btn-primary flex-1 min-h-12">
+            <button onClick={handleNextToLocation} className="btn-primary flex-1 min-h-12">
               {t("report.next")}
               <ArrowRight className="h-4 w-4" />
             </button>
@@ -533,6 +570,22 @@ export function ReportIssueScreen() {
             <h2 className="text-lg font-bold text-foreground">{t("common.location")}</h2>
             <p className="text-xs text-muted-foreground">Help authorities pinpoint the exact location</p>
           </div>
+
+          {/* GAP 8 — Duplicate warning banner */}
+          {showDupWarning && duplicates.length > 0 && (
+            <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/8 p-4">
+              <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5 text-amber-500" />
+              <div className="flex-1">
+                <p className="text-xs font-bold text-amber-700 dark:text-amber-400">{t("report.duplicateWarning")}</p>
+                <p className="text-[11px] text-amber-600 dark:text-amber-500 mt-0.5">
+                  There {duplicates.length === 1 ? "is" : "are"} already {duplicates.length} open {duplicates.length === 1 ? "issue" : "issues"} in the <strong>{duplicates[0]?.category}</strong> category. Consider checking if yours is already reported.
+                </p>
+              </div>
+              <button onClick={() => setShowDupWarning(false)} className="text-amber-500 hover:text-amber-700">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
 
           <button
             onClick={handleDetectLocation}
@@ -602,6 +655,8 @@ export function ReportIssueScreen() {
           </div>
         </div>
       )}
+
+
 
       {/* Camera Modal */}
       {showCameraModal && (

@@ -11,6 +11,8 @@ import { ReportIssueScreen } from "./report-issue-screen"
 import { EmergencyContactsScreen } from "./emergency-contacts-screen"
 import { ResolvedIssuesScreen } from "./resolved-issues-screen"
 import { MapScreen } from "./map-screen"
+import { AnalyticsScreen } from "./analytics-screen"
+import { OnboardingProvider } from "./onboarding-sheet"
 
 export function AppShell() {
   const { t } = useLanguage()
@@ -40,6 +42,7 @@ export function AppShell() {
       case "map": return <MapScreen />
       case "contacts": return <EmergencyContactsScreen />
       case "resolved": return <ResolvedIssuesScreen />
+      case "analytics": return <AnalyticsScreen />
       default: return <DashboardScreen onIssueClick={handleIssueClick} />
     }
   }
@@ -47,10 +50,12 @@ export function AppShell() {
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background">
       <TopNavbar onNavigate={handleNavigate} />
-      <main className="mx-auto w-full max-w-5xl flex-1 pb-24">
+      <main className="mx-auto w-full max-w-5xl flex-1 pb-28">
         {renderContent()}
       </main>
       <BottomNav activeTab={activeTab} onTabChange={handleNavigate} />
+      {/* GAP 17 — Onboarding (first launch only) */}
+      <OnboardingProvider />
     </div>
   )
 }

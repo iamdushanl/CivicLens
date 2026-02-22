@@ -1,7 +1,7 @@
 "use client"
 
 import { useLanguage } from "@/lib/language-context"
-import { Home, PlusCircle, MapPin, Phone, CheckCircle2 } from "lucide-react"
+import { Home, PlusCircle, MapPin, CheckCircle2, BarChart2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface BottomNavProps {
@@ -13,8 +13,8 @@ const navItems = [
   { id: "home", icon: Home, labelKey: "home" },
   { id: "report", icon: PlusCircle, labelKey: "report" },
   { id: "map", icon: MapPin, labelKey: "map" },
+  { id: "analytics", icon: BarChart2, labelKey: "analytics" },
   { id: "resolved", icon: CheckCircle2, labelKey: "resolved" },
-  { id: "contacts", icon: Phone, labelKey: "contacts" },
 ]
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
