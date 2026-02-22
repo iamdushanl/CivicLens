@@ -26,7 +26,8 @@ import { getCategoryIcon, getSeverityColor } from "@/lib/category-helpers"
 import { cn } from "@/lib/utils"
 import { createIssue, getIssues } from "@/lib/api-client"
 import { CameraCapture } from "@/components/camera-capture"
-import { saveReportDraft, getReportDraft, clearReportDraft } from "@/lib/local-store"
+import { saveReportDraft, getReportDraft, clearReportDraft, addMyReport } from "@/lib/local-store"
+import { AddressAutocomplete } from "@/components/address-autocomplete"
 import type { Issue } from "@/lib/types"
 
 const categories: { value: IssueCategory; labelKey: string; gradient: string }[] = [
@@ -187,6 +188,15 @@ export function ReportIssueScreen() {
         setAiCategory(map[String(created.aiCategory).toLowerCase()] || aiCategory)
       }
       clearReportDraft() // GAP 16 — clear draft after successful submit
+      // GAP 1 — Save to My Reports for the profile screen
+      addMyReport({
+        id: created.id || fallbackId,
+        title: title.trim() || "Reported Issue",
+        category: aiCategory,
+        status: "open",
+        location: locationText.trim() || "Unknown location",
+        submittedAt: new Date().toISOString(),
+      })
       setSubmitted(true)
     } catch {
       setSubmitError(t("reportIssue"))
@@ -609,15 +619,20 @@ export function ReportIssueScreen() {
           )}
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-foreground">{t("report.manualAddress")}</label>
-            <input
-              type="text"
+            <label className="text-sm font-semibold text-foreground">
+              {t("report.manualAddress")}
+              <span className="ml-2 text-[10px] font-normal text-muted-foreground">Powered by OpenStreetMap</span>
+            </label>
+            <AddressAutocomplete
               value={locationText}
-              onChange={(e) => setLocationText(e.target.value)}
+              onChange={(val, coords) => {
+                setLocationText(val)
+                if (coords) setDetectedCoords(coords)
+              }}
               placeholder={t("report.manualAddressPlaceholder")}
-              className="premium-input"
             />
           </div>
+
 
           {/* Map preview */}
           <div className="flex h-44 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-gradient-to-br from-muted to-muted/50">

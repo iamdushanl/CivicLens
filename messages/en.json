@@ -6,7 +6,8 @@
     "contacts": "Emergency Contacts",
     "about": "About",
     "resolved": "Resolved Issues",
-    "analytics": "Analytics"
+    "analytics": "Analytics",
+    "profile": "My Reports"
   },
   "dashboard": {
     "title": "Civic Issues Dashboard",

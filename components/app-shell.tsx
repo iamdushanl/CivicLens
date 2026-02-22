@@ -13,6 +13,7 @@ import { ResolvedIssuesScreen } from "./resolved-issues-screen"
 import { MapScreen } from "./map-screen"
 import { AnalyticsScreen } from "./analytics-screen"
 import { OnboardingProvider } from "./onboarding-sheet"
+import { MyReportsScreen } from "./my-reports-screen"
 
 export function AppShell() {
   const { t } = useLanguage()
@@ -43,6 +44,7 @@ export function AppShell() {
       case "contacts": return <EmergencyContactsScreen />
       case "resolved": return <ResolvedIssuesScreen />
       case "analytics": return <AnalyticsScreen />
+      case "profile": return <MyReportsScreen onReportIssue={() => handleNavigate("report")} />
       default: return <DashboardScreen onIssueClick={handleIssueClick} />
     }
   }

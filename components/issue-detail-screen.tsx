@@ -53,6 +53,12 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
   const [commentSubmitting, setCommentSubmitting] = useState(false)
   const [commentCount, setCommentCount] = useState(issue.commentCount)
 
+  // ── GAP 12: Official Response
+  const [showOfficialPanel, setShowOfficialPanel] = useState(false)
+  const [officialRole, setOfficialRole] = useState("Municipal Council")
+  const [officialText, setOfficialText] = useState("")
+  const [officialSent, setOfficialSent] = useState(false)
+
   // ── Resolution vote
   const [resolveVotes, setResolveVotes] = useState({
     yes: issue.resolutionConfirmations || 0,
@@ -504,6 +510,110 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* ── GAP 12: Official Response Channel ── */}
+        <div className="section-card overflow-hidden">
+          <button
+            onClick={() => setShowOfficialPanel((v) => !v)}
+            className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-muted/40"
+          >
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500/10">
+              <ShieldCheck className="h-4 w-4 text-emerald-500" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-foreground">Official Authority Response</p>
+              <p className="text-xs text-muted-foreground">Post an official update from your department</p>
+            </div>
+            <span className={cn("text-xs font-bold", showOfficialPanel ? "text-primary" : "text-muted-foreground")}>
+              {showOfficialPanel ? "Hide" : "Respond"}
+            </span>
+          </button>
+
+          {showOfficialPanel && (
+            <div className="border-t border-border/60 px-5 pb-5 pt-4">
+              {officialSent ? (
+                <div className="flex flex-col items-center gap-3 py-4 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10">
+                    <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                  </div>
+                  <p className="text-sm font-bold text-foreground">Official response posted!</p>
+                  <p className="text-xs text-muted-foreground">Your response is now visible to the community.</p>
+                  <button
+                    onClick={() => { setOfficialSent(false); setOfficialText("") }}
+                    className="text-xs text-primary underline"
+                  >Post another</button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {/* Department/role selector */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-foreground">Your Department</label>
+                    <select
+                      value={officialRole}
+                      onChange={(e) => setOfficialRole(e.target.value)}
+                      className="premium-input text-sm"
+                    >
+                      {[
+                        "Municipal Council",
+                        "Road Development Authority",
+                        "National Water Supply & Drainage Board",
+                        "Ceylon Electricity Board",
+                        "Ministry of Local Government",
+                        "Divisional Secretariat",
+                        "Police Department",
+                        "Other Government Department",
+                      ].map((r) => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Response text */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-foreground">Official Response</label>
+                    <textarea
+                      value={officialText}
+                      onChange={(e) => setOfficialText(e.target.value.slice(0, 500))}
+                      placeholder="e.g. We have noted this issue and scheduled a repair crew for next week…"
+                      rows={4}
+                      className="premium-input resize-none text-sm"
+                    />
+                    <span className="text-right text-[11px] text-muted-foreground">{500 - officialText.length} chars remaining</span>
+                  </div>
+
+                  {/* Info note */}
+                  <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2.5">
+                    <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
+                    <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                      This response will be marked as an official authority update and visible to all citizens.
+                    </p>
+                  </div>
+
+                  <button
+                    disabled={!officialText.trim()}
+                    onClick={() => {
+                      const officialComment: Comment = {
+                        id: `official-${Date.now()}`,
+                        issueId: issue.id,
+                        text: `[${officialRole}] ${officialText.trim()}`,
+                        author: officialRole,
+                        isAnonymous: false,
+                        isOfficial: true,
+                        createdAt: new Date().toISOString(),
+                      }
+                      setComments((prev) => [officialComment, ...prev])
+                      setCommentCount((c) => c + 1)
+                      setShowOfficialPanel(false)
+                      setOfficialSent(true)
+                    }}
+                    className="btn-primary min-h-11 disabled:opacity-50"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    Post Official Response
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

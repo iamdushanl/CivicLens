@@ -13,6 +13,8 @@ const NOTIFICATIONS_KEY = "cl_notifications"
 const DRAFT_KEY = "cl_report_draft"
 const ONBOARDED_KEY = "cl_onboarded"
 const VOTED_RESOLVE_KEY = "cl_resolve_votes"
+const USER_PROFILE_KEY = "cl_user_profile"
+const MY_REPORTS_KEY = "cl_my_reports"
 
 function isBrowser() {
     return typeof window !== "undefined"
@@ -176,4 +178,54 @@ export function hasCompletedOnboarding(): boolean {
 
 export function completeOnboarding(): void {
     writeJSON(ONBOARDED_KEY, true)
+}
+
+// ---- GAP 1: User Profile (no-account, local identity) ----
+export interface UserProfile {
+    displayName: string
+    district: string
+    avatarEmoji: string
+    joinedAt: string
+    reportCount: number
+}
+
+export function getUserProfile(): UserProfile | null {
+    return readJSON<UserProfile | null>(USER_PROFILE_KEY, null)
+}
+
+export function saveUserProfile(profile: Omit<UserProfile, "joinedAt">): void {
+    const existing = getUserProfile()
+    writeJSON(USER_PROFILE_KEY, {
+        ...profile,
+        joinedAt: existing?.joinedAt ?? new Date().toISOString(),
+    })
+}
+
+export function clearUserProfile(): void {
+    if (isBrowser()) localStorage.removeItem(USER_PROFILE_KEY)
+}
+
+// ---- GAP 1: My Reports (locally tracked submitted reports) ----
+export interface MyReport {
+    id: string
+    title: string
+    category: string
+    status: string
+    location: string
+    submittedAt: string
+}
+
+export function getMyReports(): MyReport[] {
+    return readJSON<MyReport[]>(MY_REPORTS_KEY, [])
+}
+
+export function addMyReport(report: MyReport): void {
+    const list = getMyReports()
+    // avoid duplication
+    if (list.find((r) => r.id === report.id)) return
+    writeJSON(MY_REPORTS_KEY, [report, ...list].slice(0, 100))
+}
+
+export function clearMyReports(): void {
+    if (isBrowser()) localStorage.removeItem(MY_REPORTS_KEY)
 }
