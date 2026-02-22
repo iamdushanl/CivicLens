@@ -10,10 +10,12 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.10
       - key: DEMO_MODE
-        value: true
+        value: false
       - key: FLASK_DEBUG
         value: false
       - key: FRONTEND_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
         sync: false
       - key: SUPABASE_URL
         sync: false
