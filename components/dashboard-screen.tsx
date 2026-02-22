@@ -1,14 +1,27 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { useLanguage } from "@/lib/language-context"
 import { StatsBanner } from "./stats-banner"
 import { IssueCard } from "./issue-card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import type { Issue, IssueStatus, IssueCategory } from "@/lib/types"
-import { ChevronDown, Filter } from "lucide-react"
+import { ChevronDown, Filter, Sparkles, TrendingUp, Search, X, MapPin, Loader2 } from "lucide-react"
 import { getIssues } from "@/lib/api-client"
 import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
+
+// ── Haversine distance (km) — GAP 9: Near Me sort ──
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLon = ((lon2 - lon1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
 
 interface DashboardScreenProps {
   onIssueClick: (issue: Issue) => void
@@ -24,233 +37,298 @@ export function DashboardScreen({ onIssueClick }: DashboardScreenProps) {
   const [issues, setIssues] = useState<Issue[]>([])
   const [loading, setLoading] = useState(true)
 
+  // GAP 14 — Search
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchFocused, setSearchFocused] = useState(false)
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  // GAP 9 — Near Me: user location
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [locating, setLocating] = useState(false)
+
   useEffect(() => {
     let active = true
     setLoading(true)
-
-    const loadIssues = async () => {
-      const result = await getIssues()
-      if (active) {
-        setIssues(result)
-        setLoading(false)
-      }
-    }
-
-    loadIssues()
-
-    return () => {
-      active = false
-    }
+    getIssues().then((result) => {
+      if (active) { setIssues(result); setLoading(false) }
+    })
+    return () => { active = false }
   }, [])
 
+  // Auto-get location when near sort selected
+  useEffect(() => {
+    if (sortBy === "near" && !userCoords && !locating) {
+      setLocating(true)
+      navigator.geolocation?.getCurrentPosition(
+        (pos) => {
+          setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+          setLocating(false)
+        },
+        () => { setLocating(false) }
+      )
+    }
+  }, [sortBy, userCoords, locating])
+
   const filteredIssues = useMemo(() => {
-    let nextIssues = [...issues]
+    let next = [...issues]
 
-    if (statusFilter !== "all") {
-      nextIssues = nextIssues.filter((i) => i.status === statusFilter)
-    }
-
-    if (categoryFilter !== "all") {
-      nextIssues = nextIssues.filter((i) => i.category === categoryFilter)
-    }
-
-    if (sortBy === "upvotes") {
-      nextIssues.sort((a, b) => b.upvotes - a.upvotes)
-    } else if (sortBy === "recent") {
-      nextIssues.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    // GAP 14 — keyword search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      next = next.filter(
+        (i) => i.title.toLowerCase().includes(q) || i.description.toLowerCase().includes(q) || i.location.toLowerCase().includes(q)
       )
     }
 
-    return nextIssues
-  }, [issues, statusFilter, categoryFilter, sortBy])
+    if (statusFilter !== "all") next = next.filter((i) => i.status === statusFilter)
+    if (categoryFilter !== "all") next = next.filter((i) => i.category === categoryFilter)
 
-  const sortLabel =
-    sortBy === "upvotes"
-      ? t("mostUpvoted")
-      : sortBy === "recent"
-        ? t("mostRecent")
-        : t("nearMe")
+    if (sortBy === "upvotes") next.sort((a, b) => b.upvotes - a.upvotes)
+    else if (sortBy === "recent") next.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    else if (sortBy === "near" && userCoords) {
+      // GAP 9 — Haversine distance sort
+      next.sort((a, b) => {
+        const dA = a.coordinates ? haversineKm(userCoords.lat, userCoords.lng, a.coordinates.lat, a.coordinates.lng) : 999
+        const dB = b.coordinates ? haversineKm(userCoords.lat, userCoords.lng, b.coordinates.lat, b.coordinates.lng) : 999
+        return dA - dB
+      })
+    }
 
+    return next
+  }, [issues, statusFilter, categoryFilter, sortBy, searchQuery, userCoords])
+
+  const sortLabel = sortBy === "upvotes" ? t("mostUpvoted") : sortBy === "recent" ? t("mostRecent") : t("nearMe")
   const categoryLabel = categoryFilter === "all" ? t("all") : t(categoryFilter)
 
   const categories: Array<"all" | IssueCategory> = [
-    "all",
-    "potholes",
-    "streetLights",
-    "garbage",
-    "waterSupply",
-    "roadDamage",
-    "drainage",
-    "publicSafety",
-    "other",
+    "all", "potholes", "streetLights", "garbage", "waterSupply",
+    "roadDamage", "drainage", "publicSafety", "other",
+  ]
+
+  const tabItems = [
+    { value: "all", label: t("all") },
+    { value: "open", label: t("open") },
+    { value: "in-progress", label: t("inProgress") },
+    { value: "resolved", label: t("resolved") },
   ]
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-6 pb-24">
-      {/* Title & Subtitle */}
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold text-foreground">{t("dashboard.title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("dashboard.subtitle")}</p>
+    <div className="flex flex-col gap-6 page-shell">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-700 p-6 text-white">
+        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute -left-4 bottom-0 h-24 w-24 rounded-full bg-indigo-300/20 blur-xl" />
+        <div className="relative">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold backdrop-blur-sm">
+              <Sparkles className="h-3 w-3 text-yellow-300" />
+              AI-Powered
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-white">{t("dashboard.title")}</h1>
+          <p className="mt-1.5 text-sm text-white/75 leading-relaxed">{t("dashboard.subtitle")}</p>
+          <div className="mt-4 flex items-center gap-1.5 text-[11px] font-medium text-white/60">
+            <TrendingUp className="h-3.5 w-3.5" />
+            <span>Community impact tracker for Sri Lanka</span>
+          </div>
+        </div>
       </div>
 
       {/* Stats */}
       <StatsBanner />
 
-      {/* Issues Section */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-foreground">
-            {t("dashboard.filters")}
-          </h2>
+      {/* GAP 14 — Search Bar */}
+      <div className={cn(
+        "flex items-center gap-2.5 rounded-2xl border bg-card px-4 py-3 transition-all duration-200",
+        searchFocused ? "border-violet-500/60 shadow-sm shadow-violet-500/15 ring-1 ring-violet-500/20" : "border-border"
+      )}>
+        <Search className={cn("h-4 w-4 flex-shrink-0 transition-colors", searchFocused ? "text-violet-500" : "text-muted-foreground")} />
+        <input
+          ref={searchRef}
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
+          placeholder="Search issues by title, description or location…"
+          className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => { setSearchQuery(""); searchRef.current?.focus() }}
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        )}
+      </div>
 
-          {/* Filter controls */}
-          <div className="flex gap-2">
-            {/* Category Filter */}
-            <div className="relative">
-              <button
-                onClick={() => setCategoryOpen(!categoryOpen)}
-                className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
-                aria-label={`${t("category")}: ${categoryLabel}`}
-              >
-                <Filter className="h-3 w-3" />
-                {categoryLabel}
-                <ChevronDown className="h-3 w-3" />
-              </button>
-              {categoryOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setCategoryOpen(false)} />
-                  <div className="absolute right-0 top-full z-50 mt-1 min-w-[160px] max-h-[300px] overflow-y-auto overflow-hidden rounded-lg border border-border bg-card shadow-lg">
-                    {categories.map((cat) => (
-                      <button
-                        key={cat}
-                        onClick={() => {
-                          setCategoryFilter(cat)
-                          setCategoryOpen(false)
-                        }}
-                        className={`flex w-full px-3 py-2 text-xs font-medium transition-colors text-left ${
-                          categoryFilter === cat
-                            ? "bg-primary text-primary-foreground"
-                            : "text-foreground hover:bg-accent"
-                        }`}
-                      >
-                        {cat === "all" ? t("all") : t(cat)}
-                      </button>
-                    ))}
-                  </div>
-                </>
+      {/* Issues Section */}
+      <section className="section-card overflow-hidden">
+        <div className="border-b border-border/60 bg-muted/30 px-5 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-foreground">{t("dashboard.filters")}</h2>
+              {searchQuery && (
+                <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-bold text-violet-600 dark:text-violet-400">
+                  {filteredIssues.length} result{filteredIssues.length !== 1 ? "s" : ""}
+                </span>
               )}
             </div>
 
-            {/* Sort Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setSortOpen(!sortOpen)}
-                className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
-                aria-label={`${t("sort")}: ${sortLabel}`}
-              >
-                {sortLabel}
-                <ChevronDown className="h-3 w-3" />
-              </button>
-              {sortOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setSortOpen(false)} />
-                  <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] overflow-hidden rounded-lg border border-border bg-card shadow-lg">
-                    {(["upvotes", "recent", "near"] as const).map((option) => (
-                      <button
-                        key={option}
-                        onClick={() => {
-                          setSortBy(option)
-                          setSortOpen(false)
-                        }}
-                        className={`flex w-full px-3 py-2 text-xs font-medium transition-colors ${
-                          sortBy === option
-                            ? "bg-primary text-primary-foreground"
-                            : "text-foreground hover:bg-accent"
-                        }`}
-                      >
-                        {option === "upvotes"
-                          ? t("mostUpvoted")
-                          : option === "recent"
-                            ? t("mostRecent")
-                            : t("nearMe")}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
+            {/* Filter controls */}
+            <div className="flex gap-2">
+              {/* Category Filter */}
+              <div className="relative">
+                <button
+                  onClick={() => setCategoryOpen(!categoryOpen)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-all duration-200",
+                    categoryOpen
+                      ? "border-primary bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                      : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-muted"
+                  )}
+                >
+                  <Filter className="h-3.5 w-3.5" />
+                  {categoryLabel}
+                  <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", categoryOpen && "rotate-180")} />
+                </button>
+                {categoryOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setCategoryOpen(false)} />
+                    <div className="absolute right-0 top-full z-50 mt-2 max-h-[300px] min-w-[170px] overflow-y-auto rounded-2xl border border-border bg-card p-1.5 shadow-xl shadow-black/10 animate-fade-in-scale">
+                      {categories.map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => { setCategoryFilter(cat); setCategoryOpen(false) }}
+                          className={cn(
+                            "flex w-full items-center rounded-xl px-3 py-2.5 text-xs font-medium transition-all",
+                            categoryFilter === cat
+                              ? "bg-gradient-to-r from-violet-500/20 to-indigo-500/10 text-primary font-semibold"
+                              : "text-foreground hover:bg-muted"
+                          )}
+                        >
+                          {cat === "all" ? t("all") : t(cat)}
+                          {categoryFilter === cat && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Sort Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setSortOpen(!sortOpen)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-all duration-200",
+                    sortOpen
+                      ? "border-primary bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                      : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-muted"
+                  )}
+                >
+                  {locating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                  {sortLabel}
+                  <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", sortOpen && "rotate-180")} />
+                </button>
+                {sortOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setSortOpen(false)} />
+                    <div className="absolute right-0 top-full z-50 mt-2 min-w-[150px] rounded-2xl border border-border bg-card p-1.5 shadow-xl shadow-black/10 animate-fade-in-scale">
+                      {(["upvotes", "recent", "near"] as const).map((option) => (
+                        <button
+                          key={option}
+                          onClick={() => { setSortBy(option); setSortOpen(false) }}
+                          className={cn(
+                            "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium transition-all",
+                            sortBy === option
+                              ? "bg-gradient-to-r from-violet-500/20 to-indigo-500/10 text-primary font-semibold"
+                              : "text-foreground hover:bg-muted"
+                          )}
+                        >
+                          {option === "near" && <MapPin className="h-3 w-3" />}
+                          {option === "upvotes" ? t("mostUpvoted") : option === "recent" ? t("mostRecent") : t("nearMe")}
+                          {sortBy === option && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Filter Tabs */}
-        <Tabs
-          value={statusFilter}
-          onValueChange={(val) => setStatusFilter(val as "all" | IssueStatus)}
-          className="mt-4"
-        >
-          <TabsList className="w-full grid grid-cols-4">
-            <TabsTrigger value="all" className="text-xs">
-              {t("all")}
-            </TabsTrigger>
-            <TabsTrigger value="open" className="text-xs">
-              {t("open")}
-            </TabsTrigger>
-            <TabsTrigger value="in-progress" className="text-xs">
-              {t("inProgress")}
-            </TabsTrigger>
-            <TabsTrigger value="resolved" className="text-xs">
-              {t("resolved")}
-            </TabsTrigger>
-          </TabsList>
+        <div className="p-5">
+          {/* Filter Tabs */}
+          <Tabs value={statusFilter} onValueChange={(val) => setStatusFilter(val as "all" | IssueStatus)}>
+            <TabsList className="w-full grid grid-cols-4 rounded-xl bg-muted/60 p-1">
+              {tabItems.map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="rounded-lg text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-foreground dark:data-[state=active]:bg-card"
+                >
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-          <TabsContent value={statusFilter} className="mt-4">
-            {loading ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <Skeleton className="h-9 w-9 rounded-lg" />
-                        <Skeleton className="h-5 w-16" />
+            <TabsContent value={statusFilter} className="mt-5">
+              {loading ? (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="flex flex-col gap-3 rounded-2xl border border-border overflow-hidden">
+                      <div className="skeleton-shimmer h-1.5 w-full" />
+                      <div className="flex flex-col gap-3 p-4">
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-10 w-10 rounded-xl" />
+                          <Skeleton className="h-5 w-16 rounded-full" />
+                        </div>
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-3 w-2/3" />
                       </div>
-                      <Skeleton className="h-5 w-14" />
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-full" />
-                      <Skeleton className="h-3 w-2/3" />
-                    </div>
-                    <Skeleton className="h-3 w-1/2" />
-                    <div className="flex items-center justify-between border-t border-border pt-3">
-                      <Skeleton className="h-6 w-16" />
-                      <Skeleton className="h-3 w-24" />
-                    </div>
+                  ))}
+                </div>
+              ) : filteredIssues.length > 0 ? (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredIssues.map((issue) => (
+                    <IssueCard
+                      key={issue.id}
+                      issue={issue}
+                      onClick={() => onIssueClick(issue)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-4 py-16">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+                    {searchQuery ? <Search className="h-7 w-7 text-muted-foreground" /> : <Filter className="h-7 w-7 text-muted-foreground" />}
                   </div>
-                ))}
-              </div>
-            ) : filteredIssues.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredIssues.map((issue) => (
-                  <IssueCard
-                    key={issue.id}
-                    issue={issue}
-                    onClick={() => onIssueClick(issue)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="col-span-full flex flex-col items-center gap-2 py-12 text-muted-foreground">
-                <p className="text-sm font-medium">{t("noIssuesFound")}</p>
-                <p className="text-xs">
-                  {statusFilter !== "all" || categoryFilter !== "all"
-                    ? t("filter")
-                    : ""}
-                </p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+                  <div className="flex flex-col items-center gap-1 text-center">
+                    <p className="text-sm font-semibold text-foreground">
+                      {searchQuery ? `No results for "${searchQuery}"` : t("noIssuesFound")}
+                    </p>
+                    <p className="text-xs text-muted-foreground max-w-xs">
+                      {searchQuery ? "Try a different keyword or clear the search." : "Be the first to report an issue in your community."}
+                    </p>
+                  </div>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="rounded-xl border border-border px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+                    >
+                      Clear search
+                    </button>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
       </section>
     </div>
   )

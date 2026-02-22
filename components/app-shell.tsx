@@ -11,6 +11,9 @@ import { ReportIssueScreen } from "./report-issue-screen"
 import { EmergencyContactsScreen } from "./emergency-contacts-screen"
 import { ResolvedIssuesScreen } from "./resolved-issues-screen"
 import { MapScreen } from "./map-screen"
+import { AnalyticsScreen } from "./analytics-screen"
+import { OnboardingProvider } from "./onboarding-sheet"
+import { MyReportsScreen } from "./my-reports-screen"
 
 export function AppShell() {
   const { t } = useLanguage()
@@ -31,35 +34,30 @@ export function AppShell() {
   }, [])
 
   const renderContent = () => {
-    // If viewing issue detail, show that instead
     if (selectedIssue) {
       return <IssueDetailScreen issue={selectedIssue} onBack={handleBackFromDetail} />
     }
-
     switch (activeTab) {
-      case "home":
-        return <DashboardScreen onIssueClick={handleIssueClick} />
-      case "report":
-        return <ReportIssueScreen />
-      case "map":
-        return <MapScreen />
-      case "contacts":
-        return <EmergencyContactsScreen />
-      case "menu":
-      case "resolved":
-        return <ResolvedIssuesScreen />
-      default:
-        return <DashboardScreen onIssueClick={handleIssueClick} />
+      case "home": return <DashboardScreen onIssueClick={handleIssueClick} />
+      case "report": return <ReportIssueScreen />
+      case "map": return <MapScreen />
+      case "contacts": return <EmergencyContactsScreen />
+      case "resolved": return <ResolvedIssuesScreen />
+      case "analytics": return <AnalyticsScreen />
+      case "profile": return <MyReportsScreen onReportIssue={() => handleNavigate("report")} />
+      default: return <DashboardScreen onIssueClick={handleIssueClick} />
     }
   }
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background">
       <TopNavbar onNavigate={handleNavigate} />
-      <main className="mx-auto w-full max-w-5xl flex-1 pb-20">
+      <main className="mx-auto w-full max-w-5xl flex-1 pb-28">
         {renderContent()}
       </main>
       <BottomNav activeTab={activeTab} onTabChange={handleNavigate} />
+      {/* GAP 17 — Onboarding (first launch only) */}
+      <OnboardingProvider />
     </div>
   )
 }

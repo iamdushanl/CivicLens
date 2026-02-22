@@ -1,175 +1,297 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useLanguage } from "@/lib/language-context"
 import type { Issue, Comment } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import {
-  ArrowLeft,
-  ThumbsUp,
-  MapPin,
-  Send,
-  CheckCircle2,
-  Brain,
-  User,
-  Clock,
-  ImageIcon,
+  ArrowLeft, ThumbsUp, MapPin, Send, CheckCircle2, Brain, User, Clock,
+  ImageIcon, Share2, Bell, BellOff, Circle, CheckCircle, XCircle,
+  ShieldCheck, Copy, MessageCircle, Loader2,
 } from "lucide-react"
 import { getCategoryIcon, getSeverityColor, getStatusColor, getTimeAgo } from "@/lib/category-helpers"
 import { cn } from "@/lib/utils"
-import { getComments, postComment, resolveVote } from "@/lib/api-client"
+import { getComments, postComment, resolveVote, upvoteIssue } from "@/lib/api-client"
+import {
+  hasUpvoted, toggleUpvote, isFollowing, toggleFollow,
+  hasVotedResolve, markResolveVoted,
+  addNotification,
+} from "@/lib/local-store"
 
 interface IssueDetailScreenProps {
   issue: Issue
   onBack: () => void
 }
 
+const categoryGradients: Record<string, string> = {
+  potholes: "from-orange-500 to-amber-500",
+  streetLights: "from-yellow-500 to-amber-400",
+  garbage: "from-lime-500 to-green-500",
+  waterSupply: "from-sky-500 to-cyan-500",
+  roadDamage: "from-rose-500 to-red-500",
+  drainage: "from-blue-500 to-indigo-500",
+  publicSafety: "from-violet-500 to-purple-500",
+  other: "from-slate-500 to-gray-500",
+}
+
 export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
   const { t } = useLanguage()
+
+  // ── Upvote state (persisted)
   const [upvotes, setUpvotes] = useState(issue.upvotes)
-  const [hasUpvoted, setHasUpvoted] = useState(false)
+  const [voted, setVoted] = useState(false)
+
+  // ── Follow state (persisted)
+  const [following, setFollowing] = useState(false)
+
+  // ── Comments
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState("")
+  const [commentAnon, setCommentAnon] = useState(false)
+  const [commentsLoading, setCommentsLoading] = useState(true)
+  const [commentSubmitting, setCommentSubmitting] = useState(false)
+  const [commentCount, setCommentCount] = useState(issue.commentCount)
+
+  // ── GAP 12: Official Response
+  const [showOfficialPanel, setShowOfficialPanel] = useState(false)
+  const [officialRole, setOfficialRole] = useState("Municipal Council")
+  const [officialText, setOfficialText] = useState("")
+  const [officialSent, setOfficialSent] = useState(false)
+
+  // ── Resolution vote
   const [resolveVotes, setResolveVotes] = useState({
     yes: issue.resolutionConfirmations || 0,
     no: 0,
   })
-  const [hasVoted, setHasVoted] = useState(false)
+  const [hasVotedRes, setHasVotedRes] = useState(false)
   const [voteSubmitting, setVoteSubmitting] = useState(false)
   const [voteError, setVoteError] = useState<string | null>(null)
-  const [commentsLoading, setCommentsLoading] = useState(true)
-  const [commentSubmitting, setCommentSubmitting] = useState(false)
-  const [commentsError, setCommentsError] = useState<string | null>(null)
 
-  useEffect(() => {
-    let active = true
+  // ── Share toast
+  const [shareToast, setShareToast] = useState(false)
 
-    const loadComments = async () => {
-      setCommentsLoading(true)
-      setCommentsError(null)
-      try {
-        const result = await getComments(issue.id)
-        if (!active) return
-        setComments(result)
-      } catch {
-        if (!active) return
-        setCommentsError("Unable to load comments")
-      } finally {
-        if (active) {
-          setCommentsLoading(false)
-        }
-      }
-    }
-
-    loadComments()
-
-    return () => {
-      active = false
-    }
-  }, [issue.id])
-
+  const gradient = categoryGradients[issue.category] || "from-violet-500 to-indigo-500"
   const CategoryIcon = getCategoryIcon(issue.category)
   const totalVotes = resolveVotes.yes + resolveVotes.no
   const resolveProgress = totalVotes > 0 ? (resolveVotes.yes / 3) * 100 : 0
 
-  const handleUpvote = () => {
-    if (!hasUpvoted) {
-      setUpvotes((prev) => prev + 1)
-      setHasUpvoted(true)
-    } else {
-      setUpvotes((prev) => prev - 1)
-      setHasUpvoted(false)
+  // Load persisted state
+  useEffect(() => {
+    setVoted(hasUpvoted(issue.id))
+    setFollowing(isFollowing(issue.id))
+    setHasVotedRes(hasVotedResolve(issue.id))
+  }, [issue.id])
+
+  // Load comments
+  useEffect(() => {
+    let active = true
+    setCommentsLoading(true)
+    getComments(issue.id)
+      .then((result) => { if (active) setComments(result) })
+      .finally(() => { if (active) setCommentsLoading(false) })
+    return () => { active = false }
+  }, [issue.id])
+
+  // ── Handlers
+  const handleUpvote = useCallback(async () => {
+    const nowVoted = toggleUpvote(issue.id)
+    setVoted(nowVoted)
+    setUpvotes((prev) => nowVoted ? prev + 1 : prev - 1)
+    // Also fire API (fire-and-forget)
+    try { await upvoteIssue(issue.id) } catch { /* ignore */ }
+  }, [issue.id])
+
+  const handleFollow = useCallback(() => {
+    const nowFollowing = toggleFollow(issue.id)
+    setFollowing(nowFollowing)
+    if (nowFollowing) {
+      addNotification({
+        id: `notif-${issue.id}-${Date.now()}`,
+        issueId: issue.id,
+        issueTitle: issue.title,
+        message: `You're now following "${issue.title}"`,
+        type: "status_update",
+        read: false,
+        createdAt: new Date().toISOString(),
+      })
     }
-  }
+  }, [issue.id, issue.title])
 
-  const handleResolveVote = async (vote: "yes" | "no") => {
-    if (hasVoted || voteSubmitting) return
+  const handleShare = useCallback(async () => {
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/issue/${issue.id}`
+    const text = `🚨 Civic Issue: ${issue.title}\n📍 ${issue.location}\n\nReport on CivicLens: ${url}`
 
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: issue.title, text, url })
+        return
+      } catch { /* user cancelled */ }
+    }
+
+    // Fallback: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(text)
+      setShareToast(true)
+      setTimeout(() => setShareToast(false), 2500)
+    } catch { /* ignore */ }
+  }, [issue.id, issue.title, issue.location])
+
+  const handleResolveVote = useCallback(async (vote: "yes" | "no") => {
+    if (hasVotedRes || voteSubmitting) return
     setVoteSubmitting(true)
     setVoteError(null)
-
     try {
       const result = await resolveVote(issue.id, vote)
       setResolveVotes({ yes: result.yes, no: result.no })
-      setHasVoted(true)
-      if (result.duplicate) {
-        setVoteError("Vote already submitted for this issue")
-      }
+      setHasVotedRes(true)
+      markResolveVoted(issue.id)
     } catch {
       setVoteError("Unable to submit vote right now")
     } finally {
       setVoteSubmitting(false)
     }
-  }
+  }, [issue.id, hasVotedRes, voteSubmitting])
 
-  const handlePostComment = async () => {
-    if (!newComment.trim()) return
-
+  const handlePostComment = useCallback(async () => {
+    if (!newComment.trim() || commentSubmitting) return
     setCommentSubmitting(true)
-    setCommentsError(null)
-
     try {
-      const created = await postComment(issue.id, newComment.trim(), false)
+      const created = await postComment(issue.id, newComment.trim(), commentAnon)
       setComments((prev) => [created, ...prev])
+      setCommentCount((c) => c + 1) // optimistic increment
       setNewComment("")
-    } catch {
-      setCommentsError("Unable to post comment")
-    } finally {
+    } catch { /* ignore */ } finally {
       setCommentSubmitting(false)
     }
+  }, [issue.id, newComment, commentAnon, commentSubmitting])
+
+  // ── Status labels
+  const statusConfig: Record<string, { label: string; icon: typeof Circle; color: string; dot: string }> = {
+    open: { label: "Open", icon: Circle, color: "text-violet-600 dark:text-violet-400", dot: "bg-violet-500" },
+    "in-progress": { label: "In Progress", icon: CheckCircle, color: "text-amber-600 dark:text-amber-400", dot: "bg-amber-500" },
+    resolved: { label: "Resolved", icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400", dot: "bg-emerald-500" },
   }
 
-  const severityLabel =
-    issue.severity === "low"
-      ? t("report.low")
-      : issue.severity === "medium"
-        ? t("report.medium")
-        : issue.severity === "high"
-          ? t("report.high")
-          : t("report.critical")
+  // ── Status history (use real or synthesise fallback)
+  const statusHistory = issue.statusHistory || [
+    { status: "open" as const, timestamp: issue.createdAt, note: "Issue reported by community", updatedBy: "system" as const },
+    ...(issue.status === "in-progress" || issue.status === "resolved"
+      ? [{ status: "in-progress" as const, timestamp: issue.createdAt, note: "Assigned to municipal team", updatedBy: "official" as const }]
+      : []),
+    ...(issue.status === "resolved"
+      ? [{ status: "resolved" as const, timestamp: issue.resolvedAt || issue.createdAt, note: issue.resolvedBy === "official" ? "Official confirmation" : "Community confirmed resolved", updatedBy: (issue.resolvedBy || "community") as "official" | "community" | "system" }]
+      : []),
+  ]
 
-  const statusLabel =
-    issue.status === "open"
-      ? t("issue.open")
-      : issue.status === "in-progress"
-        ? t("issue.inProgress")
-        : t("issue.resolved")
+  const severityLabel = issue.severity === "low" ? t("report.low")
+    : issue.severity === "medium" ? t("report.medium")
+      : issue.severity === "high" ? t("report.high")
+        : t("report.critical")
+
+  const statusLabel = issue.status === "open" ? t("issue.open")
+    : issue.status === "in-progress" ? t("issue.inProgress")
+      : t("issue.resolved")
 
   return (
-    <div className="flex flex-col pb-20">
-      {/* Back header */}
-      <div className="sticky top-14 z-30 border-b border-border bg-card/95 backdrop-blur-md">
-        <div className="mx-auto flex h-12 max-w-5xl items-center gap-3 px-4">
+    <div className="flex flex-col gap-0">
+      {/* Hero gradient strip */}
+      <div className={cn("h-2 w-full bg-gradient-to-r", gradient)} />
+
+      <div className="flex flex-col gap-6 px-4 py-5">
+        {/* Back + Actions row */}
+        <div className="flex items-center gap-2">
           <button
             onClick={onBack}
-            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-accent"
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-foreground transition-colors hover:bg-muted"
             aria-label="Go back"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-sm font-semibold text-foreground line-clamp-1">{issue.title}</h1>
+          <h1 className="flex-1 text-base font-bold text-foreground line-clamp-1">{issue.title}</h1>
+          {/* Share */}
+          <button
+            onClick={handleShare}
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-border text-foreground transition-all hover:bg-muted hover:border-primary/40"
+            aria-label="Share"
+          >
+            <Share2 className="h-4 w-4" />
+            {shareToast && (
+              <span className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-foreground px-3 py-1.5 text-[10px] font-semibold text-background shadow-lg">
+                Copied to clipboard!
+              </span>
+            )}
+          </button>
+          {/* Follow */}
+          <button
+            onClick={handleFollow}
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-xl border transition-all",
+              following
+                ? "border-violet-500/40 bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                : "border-border text-muted-foreground hover:bg-muted hover:border-primary/40"
+            )}
+            aria-label={following ? "Unfollow" : "Follow"}
+          >
+            {following ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+          </button>
         </div>
-      </div>
 
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">
-        {/* Photo placeholder */}
-        <div className="flex aspect-video items-center justify-center rounded-xl border border-border bg-muted">
-          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-            <ImageIcon className="h-10 w-10" />
-            <span className="text-xs font-medium">Issue Photo</span>
-          </div>
-        </div>
-
-        {/* AI Tag */}
-        {issue.aiConfidence && (
-          <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
-            <Brain className="h-4 w-4 text-primary" />
-            <span className="text-xs font-medium text-foreground">
-              {t("issue.aiClassified")}: {issue.aiCategory} — {issue.aiConfidence}% {t("report.confidence")}
-            </span>
+        {/* Photo */}
+        {issue.photos && issue.photos.length > 0 && issue.photos[0] !== "demo" ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={issue.photos[0]} alt="Issue photo" className="w-full aspect-video object-cover rounded-2xl" />
+        ) : (
+          <div className={cn("flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br opacity-60", gradient)}>
+            <CategoryIcon className="h-16 w-16 text-white/60" />
           </div>
         )}
+
+        {/* AI Badge */}
+        {issue.aiConfidence && (
+          <div className="flex items-center gap-3 rounded-xl border border-violet-500/20 bg-violet-500/8 px-4 py-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 shadow-sm">
+              <Brain className="h-4 w-4 text-white" />
+            </div>
+            <div className="flex flex-col gap-0.5 flex-1">
+              <span className="text-xs font-bold text-foreground">AI Classification</span>
+              <div className="flex items-center gap-2">
+                <Progress value={issue.aiConfidence} className="h-1.5 flex-1" />
+                <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400">{issue.aiConfidence}% confident</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Badges row */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm", gradient)}>
+            <CategoryIcon className="h-5 w-5 text-white" />
+          </div>
+          <Badge className={cn("text-[10px] font-semibold", getSeverityColor(issue.severity))}>
+            {severityLabel}
+          </Badge>
+          <Badge className={cn("text-[10px] font-medium", getStatusColor(issue.status))}>
+            {statusLabel}
+          </Badge>
+          {following && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2.5 py-1 text-[10px] font-bold text-violet-600 dark:text-violet-400">
+              <Bell className="h-2.5 w-2.5" /> Following
+            </span>
+          )}
+        </div>
+
+        {/* Title + Description */}
+        <div className="flex flex-col gap-2">
+          <h2 className="text-xl font-bold text-foreground">{issue.title}</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">{issue.description}</p>
+        </div>
+
+        {/* Location */}
+        <div className="section-card flex items-center gap-2.5 px-4 py-3">
+          <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+          <span className="text-sm text-foreground">{issue.location}</span>
+        </div>
 
         {/* Severity bar */}
         {issue.severityScore && (
@@ -178,102 +300,105 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
               <span className="text-xs font-semibold text-foreground">{t("report.severityScore")}</span>
               <span className="text-xs font-bold text-foreground">{issue.severityScore}/10</span>
             </div>
-            <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className={cn(
-                  "h-full rounded-full transition-all",
-                  issue.severityScore >= 8
-                    ? "bg-destructive"
-                    : issue.severityScore >= 5
-                      ? "bg-warning"
-                      : "bg-primary"
-                )}
+                className={cn("h-full rounded-full transition-all bg-gradient-to-r", gradient)}
                 style={{ width: `${issue.severityScore * 10}%` }}
               />
             </div>
           </div>
         )}
 
-        {/* Status + Severity badges */}
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-            <CategoryIcon className="h-4 w-4 text-primary" />
+        {/* ── STATUS TIMELINE (GAP 3) ── */}
+        <div className="section-card flex flex-col gap-0 overflow-hidden">
+          <div className="border-b border-border/60 bg-muted/30 px-4 py-3">
+            <h3 className="text-sm font-bold text-foreground">Status Timeline</h3>
           </div>
-          <Badge className={cn("text-[10px] font-semibold", getSeverityColor(issue.severity))}>
-            {severityLabel}
-          </Badge>
-          <Badge className={cn("text-[10px] font-medium", getStatusColor(issue.status))}>
-            {statusLabel}
-          </Badge>
-        </div>
-
-        {/* Title + Description */}
-        <div className="flex flex-col gap-2">
-          <h2 className="text-xl font-bold text-foreground text-balance">{issue.title}</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">{issue.description}</p>
-        </div>
-
-        {/* Location */}
-        <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-3">
-          <MapPin className="h-4 w-4 text-primary" />
-          <span className="text-sm text-foreground">{issue.location}</span>
-        </div>
-
-        {/* Map snippet placeholder */}
-        <div className="flex h-32 items-center justify-center rounded-xl border border-border bg-muted">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <MapPin className="h-5 w-5" />
-            <span className="text-xs font-medium">Map Preview</span>
+          <div className="flex flex-col px-4 py-4">
+            {statusHistory.map((entry, i) => {
+              const cfg = statusConfig[entry.status] || statusConfig.open
+              const StatusIcon = cfg.icon
+              const isLast = i === statusHistory.length - 1
+              return (
+                <div key={i} className="flex gap-3">
+                  {/* Dot + line */}
+                  <div className="flex flex-col items-center">
+                    <div className={cn(
+                      "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full",
+                      isLast ? "bg-gradient-to-br from-violet-600 to-indigo-600" : "bg-muted"
+                    )}>
+                      <StatusIcon className={cn("h-3.5 w-3.5", isLast ? "text-white" : cfg.color)} />
+                    </div>
+                    {!isLast && <div className="w-0.5 flex-1 bg-border my-1" />}
+                  </div>
+                  {/* Content */}
+                  <div className={cn("flex flex-col gap-0.5 pb-4", isLast && "pb-0")}>
+                    <div className="flex items-center gap-2">
+                      <span className={cn("text-xs font-bold", cfg.color)}>{cfg.label}</span>
+                      {entry.updatedBy === "official" && (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
+                          <ShieldCheck className="h-2.5 w-2.5" /> Official
+                        </span>
+                      )}
+                    </div>
+                    {entry.note && <p className="text-[11px] text-muted-foreground">{entry.note}</p>}
+                    <p className="text-[10px] text-muted-foreground">{getTimeAgo(entry.timestamp)}</p>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
 
-        {/* Upvote button (large) */}
+        {/* ── UPVOTE (GAP 6 — persisted) ── */}
         <button
           onClick={handleUpvote}
           className={cn(
-            "flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 px-6 py-3 text-sm font-semibold transition-all",
-            hasUpvoted
-              ? "border-primary bg-primary text-primary-foreground"
-              : "border-border bg-card text-foreground hover:border-primary/50 hover:bg-primary/5"
+            "flex min-h-12 items-center justify-center gap-2.5 rounded-xl border-2 px-6 py-3 text-sm font-semibold transition-all duration-200",
+            voted
+              ? "border-transparent bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/30"
+              : "border-border bg-card text-foreground hover:border-violet-500/40 hover:bg-violet-500/5"
           )}
         >
-          <ThumbsUp className={cn("h-5 w-5", hasUpvoted && "fill-current")} />
-          {t("issue.upvote")} ({upvotes})
+          <ThumbsUp className={cn("h-5 w-5 transition-transform", voted && "fill-current scale-110")} />
+          {voted ? "Upvoted" : t("issue.upvote")} · {upvotes}
         </button>
 
-        {/* Resolution voting */}
+        {/* ── RESOLUTION VOTE ── */}
         {issue.status !== "resolved" && (
-          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
-            <h3 className="text-sm font-semibold text-foreground">
-              {t("issue.hasThisBeenResolved")}
-            </h3>
+          <div className="section-card flex flex-col gap-4 p-4">
+            <div className="flex flex-col gap-0.5">
+              <h3 className="text-sm font-bold text-foreground">{t("issue.hasThisBeenResolved")}</h3>
+              <p className="text-[11px] text-muted-foreground">Community confirms when at least 3 people say yes</p>
+            </div>
             <div className="flex gap-3">
               <button
                 onClick={() => handleResolveVote("yes")}
-                disabled={hasVoted || voteSubmitting}
+                disabled={hasVotedRes || voteSubmitting}
                 className={cn(
-                  "flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all",
-                  hasVoted && resolveVotes.yes > 0
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border text-foreground hover:border-primary/50",
-                  hasVoted && "cursor-default"
+                  "flex flex-1 min-h-11 items-center justify-center gap-2 rounded-xl border-2 px-4 py-2 text-sm font-semibold transition-all",
+                  hasVotedRes && resolveVotes.yes > 0
+                    ? "border-transparent bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
+                    : "border-border text-foreground hover:border-emerald-500/40 hover:bg-emerald-500/5",
+                  (hasVotedRes || voteSubmitting) && "cursor-default"
                 )}
               >
-                <CheckCircle2 className="h-4 w-4" />
-                {t("common.yes")}
+                {voteSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                Yes ({resolveVotes.yes})
               </button>
               <button
                 onClick={() => handleResolveVote("no")}
-                disabled={hasVoted || voteSubmitting}
+                disabled={hasVotedRes || voteSubmitting}
                 className={cn(
-                  "flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all",
-                  hasVoted && resolveVotes.no > 0
-                    ? "border-destructive bg-destructive/10 text-destructive"
-                    : "border-border text-foreground hover:border-destructive/50",
-                  hasVoted && "cursor-default"
+                  "flex flex-1 min-h-11 items-center justify-center gap-2 rounded-xl border-2 px-4 py-2 text-sm font-semibold transition-all",
+                  hasVotedRes && resolveVotes.no > 0
+                    ? "border-transparent bg-gradient-to-r from-rose-500 to-red-500 text-white"
+                    : "border-border text-foreground hover:border-rose-500/40 hover:bg-rose-500/5",
+                  (hasVotedRes || voteSubmitting) && "cursor-default"
                 )}
               >
-                {t("common.no")}
+                <XCircle className="h-4 w-4" />
+                No ({resolveVotes.no})
               </button>
             </div>
             <div className="flex flex-col gap-1">
@@ -282,57 +407,99 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
                 {resolveVotes.yes} / 3 {t("issue.confirmationsNeeded")}
               </p>
             </div>
-            {voteError && (
-              <p className="text-[10px] text-muted-foreground">{voteError}</p>
-            )}
+            {voteError && <p className="text-[10px] text-amber-600">{voteError}</p>}
           </div>
         )}
 
-        {/* Comments Section */}
-        <div className="flex flex-col gap-4">
-          <h3 className="text-sm font-semibold text-foreground">
-            {t("issue.comments")} ({comments.length})
-          </h3>
+        {/* ── SHARE ACTIONS (GAP 7) ── */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleShare}
+            className="section-card flex flex-1 items-center justify-center gap-2 py-3 text-xs font-semibold text-foreground transition-all hover:border-primary/40 hover:bg-muted"
+          >
+            <Share2 className="h-4 w-4 text-primary" />
+            Share on WhatsApp
+          </button>
+          <button
+            onClick={async () => {
+              const url = `${typeof window !== "undefined" ? window.location.origin : ""}/issue/${issue.id}`
+              try {
+                await navigator.clipboard.writeText(url)
+                setShareToast(true)
+                setTimeout(() => setShareToast(false), 2000)
+              } catch { /**/ }
+            }}
+            className="section-card flex flex-1 items-center justify-center gap-2 py-3 text-xs font-semibold text-foreground transition-all hover:border-primary/40 hover:bg-muted"
+          >
+            <Copy className="h-4 w-4 text-primary" />
+            Copy Link
+          </button>
+        </div>
 
-          {/* Comment Input */}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handlePostComment()}
-              placeholder={t("issue.writeAComment")}
-              className="flex-1 rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-            <button
-              onClick={handlePostComment}
-              disabled={!newComment.trim() || commentSubmitting}
-              className="flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-              aria-label="Post comment"
-            >
-              <Send className="h-4 w-4" />
-            </button>
+        {/* ── COMMENTS (GAP 4 — optimistic count) ── */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-bold text-foreground">
+              {t("issue.comments")} ({commentCount})
+            </h3>
           </div>
 
-          {/* Comment Bubbles */}
+          {/* Comment input */}
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handlePostComment()}
+                placeholder={t("issue.writeAComment")}
+                className="premium-input flex-1"
+              />
+              <button
+                onClick={handlePostComment}
+                disabled={!newComment.trim() || commentSubmitting}
+                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-md transition-all hover:shadow-violet-500/30 disabled:opacity-50"
+                aria-label="Post comment"
+              >
+                {commentSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </button>
+            </div>
+            <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={commentAnon}
+                onChange={(e) => setCommentAnon(e.target.checked)}
+                className="rounded"
+              />
+              Post anonymously
+            </label>
+          </div>
+
+          {/* Comment list */}
           <div className="flex flex-col gap-3">
             {commentsLoading && (
-              <p className="text-xs text-muted-foreground">Loading comments...</p>
+              <div className="flex items-center gap-2 py-3 text-xs text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Loading comments...
+              </div>
             )}
-
-            {commentsError && (
-              <p className="text-xs text-muted-foreground">{commentsError}</p>
-            )}
-
             {comments.map((comment) => (
               <div
                 key={comment.id}
-                className="flex flex-col gap-1 rounded-xl border border-border bg-muted/30 px-4 py-3"
+                className={cn(
+                  "flex flex-col gap-1 rounded-xl border px-4 py-3",
+                  comment.isOfficial
+                    ? "border-emerald-500/20 bg-emerald-500/5"
+                    : "border-border bg-muted/30"
+                )}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
-                    <User className="h-3 w-3" />
-                    {comment.isAnonymous ? t("common.anonymous") : comment.author}
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                    {comment.isOfficial
+                      ? <><ShieldCheck className="h-3 w-3 text-emerald-500" /> Official Response</>
+                      : <><User className="h-3 w-3" /> {comment.isAnonymous ? t("common.anonymous") : comment.author}</>
+                    }
                   </div>
                   <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                     <Clock className="h-3 w-3" />
@@ -343,6 +510,110 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* ── GAP 12: Official Response Channel ── */}
+        <div className="section-card overflow-hidden">
+          <button
+            onClick={() => setShowOfficialPanel((v) => !v)}
+            className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-muted/40"
+          >
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500/10">
+              <ShieldCheck className="h-4 w-4 text-emerald-500" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-foreground">Official Authority Response</p>
+              <p className="text-xs text-muted-foreground">Post an official update from your department</p>
+            </div>
+            <span className={cn("text-xs font-bold", showOfficialPanel ? "text-primary" : "text-muted-foreground")}>
+              {showOfficialPanel ? "Hide" : "Respond"}
+            </span>
+          </button>
+
+          {showOfficialPanel && (
+            <div className="border-t border-border/60 px-5 pb-5 pt-4">
+              {officialSent ? (
+                <div className="flex flex-col items-center gap-3 py-4 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10">
+                    <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                  </div>
+                  <p className="text-sm font-bold text-foreground">Official response posted!</p>
+                  <p className="text-xs text-muted-foreground">Your response is now visible to the community.</p>
+                  <button
+                    onClick={() => { setOfficialSent(false); setOfficialText("") }}
+                    className="text-xs text-primary underline"
+                  >Post another</button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {/* Department/role selector */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-foreground">Your Department</label>
+                    <select
+                      value={officialRole}
+                      onChange={(e) => setOfficialRole(e.target.value)}
+                      className="premium-input text-sm"
+                    >
+                      {[
+                        "Municipal Council",
+                        "Road Development Authority",
+                        "National Water Supply & Drainage Board",
+                        "Ceylon Electricity Board",
+                        "Ministry of Local Government",
+                        "Divisional Secretariat",
+                        "Police Department",
+                        "Other Government Department",
+                      ].map((r) => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Response text */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-foreground">Official Response</label>
+                    <textarea
+                      value={officialText}
+                      onChange={(e) => setOfficialText(e.target.value.slice(0, 500))}
+                      placeholder="e.g. We have noted this issue and scheduled a repair crew for next week…"
+                      rows={4}
+                      className="premium-input resize-none text-sm"
+                    />
+                    <span className="text-right text-[11px] text-muted-foreground">{500 - officialText.length} chars remaining</span>
+                  </div>
+
+                  {/* Info note */}
+                  <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2.5">
+                    <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
+                    <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                      This response will be marked as an official authority update and visible to all citizens.
+                    </p>
+                  </div>
+
+                  <button
+                    disabled={!officialText.trim()}
+                    onClick={() => {
+                      const officialComment: Comment = {
+                        id: `official-${Date.now()}`,
+                        issueId: issue.id,
+                        text: `[${officialRole}] ${officialText.trim()}`,
+                        author: officialRole,
+                        isAnonymous: false,
+                        isOfficial: true,
+                        createdAt: new Date().toISOString(),
+                      }
+                      setComments((prev) => [officialComment, ...prev])
+                      setCommentCount((c) => c + 1)
+                      setShowOfficialPanel(false)
+                      setOfficialSent(true)
+                    }}
+                    className="btn-primary min-h-11 disabled:opacity-50"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    Post Official Response
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

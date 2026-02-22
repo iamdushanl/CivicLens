@@ -5,7 +5,9 @@
     "map": "Map",
     "contacts": "Emergency Contacts",
     "about": "About",
-    "resolved": "Resolved Issues"
+    "resolved": "Resolved Issues",
+    "analytics": "Analytics",
+    "profile": "My Reports"
   },
   "dashboard": {
     "title": "Civic Issues Dashboard",
@@ -52,7 +54,7 @@
     "changeCategory": "Change Category",
     "uncertainWarning": "AI isn't sure — please verify the category",
     "categoryNotConfident": "Category not confident (less than 70%)",
-    "title": "Issue Title",
+    "fieldTitle": "Issue Title",
     "description": "Description",
     "descriptionPlaceholder": "Describe the issue in detail...",
     "severity": "Severity Level",

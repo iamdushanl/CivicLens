@@ -10,6 +10,13 @@ export type IssueCategory =
   | "publicSafety"
   | "other"
 
+export interface StatusHistoryEntry {
+  status: IssueStatus
+  timestamp: string
+  note?: string
+  updatedBy?: "system" | "official" | "community"
+}
+
 export interface Issue {
   id: string
   title: string
@@ -31,6 +38,8 @@ export interface Issue {
   resolutionConfirmations?: number
   resolvedAt?: string
   resolvedBy?: "community" | "reporter" | "official"
+  statusHistory?: StatusHistoryEntry[]
+  district?: string
 }
 
 export interface Comment {
@@ -40,6 +49,7 @@ export interface Comment {
   author: string
   isAnonymous: boolean
   createdAt: string
+  isOfficial?: boolean
 }
 
 export interface EmergencyContact {
@@ -55,4 +65,14 @@ export interface NationalHotline {
   name: string
   number: string
   icon: string
+}
+
+export interface Notification {
+  id: string
+  issueId: string
+  issueTitle: string
+  message: string
+  type: "status_update" | "comment" | "upvote" | "resolved"
+  read: boolean
+  createdAt: string
 }
