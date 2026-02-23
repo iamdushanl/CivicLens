@@ -72,7 +72,7 @@ export function MyReportsScreen({ onReportIssue }: MyReportsScreenProps) {
         return (
             <div className="flex flex-col bg-background min-h-screen">
                 {/* SCF cyan header */}
-                <div className="px-4 pt-10 pb-6 text-white" style={{ background: "var(--scf-cyan)" }}>
+                <div className="px-4 pt-10 pb-6 text-white" style={{ background: "var(--scf-blue)" }}>
                     <div className="flex flex-col items-center gap-3 text-center">
                         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/25 text-4xl">
                             🧑‍💼
@@ -174,7 +174,7 @@ export function MyReportsScreen({ onReportIssue }: MyReportsScreenProps) {
     return (
         <div className="flex flex-col bg-background min-h-screen">
             {/* SCF-style cyan profile header */}
-            <div className="px-4 pt-8 pb-5 text-white" style={{ background: "var(--scf-cyan)" }}>
+            <div className="px-4 pt-8 pb-5 text-white" style={{ background: "var(--scf-blue)" }}>
                 <div className="flex items-center gap-4">
                     <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-white/25 text-3xl">
                         {profile!.avatarEmoji}

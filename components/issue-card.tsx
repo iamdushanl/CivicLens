@@ -12,23 +12,25 @@ interface IssueCardProps {
   onClick?: () => void
 }
 
-/* SeeClickFix exact status badge styles */
-function StatusBadge({ status }: { status: string }) {
-  if (status === "resolved") return <span className="scf-status-resolved">Resolved</span>
-  if (status === "in-progress") return <span className="scf-status-acknowledged">Acknowledged</span>
-  return <span className="scf-status-open">Open</span>
+/* SeeClickFix exact status text — plain text on list, NOT pill badges */
+function StatusText({ status }: { status: string }) {
+  if (status === "resolved")
+    return <span className="text-xs font-semibold" style={{ color: "#34A853" }}>Resolved</span>
+  if (status === "in-progress")
+    return <span className="text-xs font-semibold" style={{ color: "#34A853" }}>Acknowledged</span>
+  return <span className="text-xs font-semibold text-muted-foreground">Open</span>
 }
 
-/* Category → background color for icon circle */
+/* Category → exact SCF app icon background colors */
 const categoryColors: Record<string, string> = {
-  potholes: "#E65100",
-  streetLights: "#F57F17",
-  garbage: "#2E7D32",
-  waterSupply: "#0277BD",
-  roadDamage: "#C62828",
-  drainage: "#1565C0",
-  publicSafety: "#6A1B9A",
-  other: "#546E7A",
+  potholes: "#F4511E",  /* deep orange — road damage */
+  streetLights: "#F5A623",  /* amber — lights */
+  garbage: "#34A853",  /* green — environment */
+  waterSupply: "#00AEDF",  /* cyan — water */
+  roadDamage: "#EA4335",  /* red — road */
+  drainage: "#1A73E8",  /* blue — drainage */
+  publicSafety: "#9C27B0",  /* purple — safety */
+  other: "#78909C",  /* blue-grey */
 }
 
 export function IssueCard({ issue, onClick }: IssueCardProps) {
@@ -36,7 +38,7 @@ export function IssueCard({ issue, onClick }: IssueCardProps) {
   const [upvotes, setUpvotes] = useState(issue.upvotes)
   const [liked, setLiked] = useState(false)
   const CategoryIcon = getCategoryIcon(issue.category)
-  const iconBg = categoryColors[issue.category] || "#1EADE3"
+  const iconBg = categoryColors[issue.category] || "#00AEDF"
 
   const handleHeart = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -47,12 +49,12 @@ export function IssueCard({ issue, onClick }: IssueCardProps) {
   return (
     <article
       onClick={onClick}
-      className="scf-card-hover flex items-start gap-3 px-4 py-3.5 cursor-pointer animate-fade-in"
+      className="flex items-start gap-3 px-4 py-3.5 bg-white cursor-pointer border-b border-border transition-colors hover:bg-muted/40 animate-fade-in"
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick?.()}
     >
-      {/* Category icon circle — SCF style */}
+      {/* Category icon circle — exact SCF style with category-specific color */}
       <div
         className="flex items-center justify-center rounded-full flex-shrink-0 mt-0.5"
         style={{ width: 42, height: 42, background: iconBg }}
@@ -62,12 +64,12 @@ export function IssueCard({ issue, onClick }: IssueCardProps) {
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        {/* Title row */}
+        {/* Title row with status right-aligned */}
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground leading-snug line-clamp-1 flex-1">
             {issue.title}
           </h3>
-          <StatusBadge status={issue.status} />
+          <StatusText status={issue.status} />
         </div>
 
         {/* Location */}
@@ -83,7 +85,7 @@ export function IssueCard({ issue, onClick }: IssueCardProps) {
 
         {/* Bottom row: heart + comments + time */}
         <div className="flex items-center gap-4 mt-2">
-          {/* Heart/upvote — SCF uses ♡ not thumbs */}
+          {/* Heart/upvote */}
           <button
             onClick={handleHeart}
             className={cn("scf-heart", liked && "active")}
