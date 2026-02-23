@@ -50,7 +50,7 @@ function OnboardingSheet({ onDone }: OnboardingSheetProps) {
         const Icon = current.icon
         const isLast = step === steps.length - 1
         return (
-            <div className="fixed inset-0 z-[300] flex flex-col" style={{ background: "var(--scf-cyan)" }}>
+            <div className="fixed inset-0 z-[300] flex h-full w-full flex-col" style={{ background: "var(--scf-blue)" }}>
                 {/* Skip */}
                 <div className="flex items-center justify-between px-6 pt-12 pb-4">
                     <div className="flex gap-1.5">
@@ -85,7 +85,7 @@ function OnboardingSheet({ onDone }: OnboardingSheetProps) {
                     <button
                         onClick={handleNext}
                         className="w-full rounded-full bg-white py-4 text-sm font-bold transition-all active:scale-[0.98]"
-                        style={{ color: "var(--scf-cyan)" }}
+                        style={{ color: "var(--scf-blue)" }}
                     >
                         {isLast ? "Get Started" : "Next →"}
                     </button>
@@ -96,14 +96,14 @@ function OnboardingSheet({ onDone }: OnboardingSheetProps) {
 
     /* SeeClickFix-style splash screen */
     return (
-        <div className="fixed inset-0 z-[300] flex flex-col items-center justify-between" style={{ background: "var(--scf-cyan)" }}>
+        <div className="fixed inset-0 z-[300] flex h-full w-full flex-col items-center justify-between" style={{ background: "var(--scf-blue)" }}>
             {/* City silhouette decoration */}
             <div className="w-full h-40 flex items-end justify-center opacity-20 overflow-hidden mt-8">
                 <svg viewBox="0 0 360 120" fill="none" className="w-full">
                     {/* Simplified city skyline */}
                     <rect x="0" y="60" width="40" height="60" rx="2" fill="white" />
                     <rect x="45" y="40" width="30" height="80" rx="2" fill="white" />
-                    <rect x="10" y="50" width="20" height="10" fill="var(--scf-cyan)" />
+                    <rect x="10" y="50" width="20" height="10" fill="var(--scf-blue)" />
                     <rect x="80" y="70" width="35" height="50" rx="2" fill="white" />
                     <rect x="120" y="30" width="25" height="90" rx="2" fill="white" />
                     <rect x="150" y="50" width="40" height="70" rx="2" fill="white" />
@@ -119,7 +119,7 @@ function OnboardingSheet({ onDone }: OnboardingSheetProps) {
             {/* Logo */}
             <div className="flex flex-col items-center gap-5 px-8 text-center">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/90 shadow-lg">
-                    <Heart className="h-10 w-10 fill-current" style={{ color: "var(--scf-cyan)" }} />
+                    <Heart className="h-10 w-10 fill-current" style={{ color: "var(--scf-blue)" }} />
                 </div>
                 <div>
                     <p className="text-xs font-semibold text-white/60 uppercase tracking-widest mb-1">Welcome To</p>
@@ -141,7 +141,7 @@ function OnboardingSheet({ onDone }: OnboardingSheetProps) {
                 <button
                     onClick={handleSignIn}
                     className="w-full rounded-full bg-white py-4 text-sm font-bold transition-all active:scale-[0.98]"
-                    style={{ color: "var(--scf-cyan)" }}
+                    style={{ color: "var(--scf-blue)" }}
                 >
                     Continue as Guest
                 </button>

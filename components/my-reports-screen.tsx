@@ -22,10 +22,10 @@ const DISTRICTS = [
     "Monaragala", "Ratnapura", "Kegalle",
 ]
 
-const statusConfig: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
-    open: { label: "Open", color: "text-violet-500", icon: FileWarning },
-    "in-progress": { label: "In Progress", color: "text-amber-500", icon: Clock },
-    resolved: { label: "Resolved", color: "text-emerald-500", icon: CheckCircle2 },
+const statusConfig: Record<string, { label: string; color: string; icon: typeof CheckCircle2; badgeClass: string }> = {
+    open: { label: "Open", color: "text-slate-500", icon: FileWarning, badgeClass: "scf-status-open" },
+    "in-progress": { label: "Acknowledged", color: "text-green-600", icon: Clock, badgeClass: "scf-status-acknowledged" },
+    resolved: { label: "Resolved", color: "text-green-600", icon: CheckCircle2, badgeClass: "scf-status-resolved" },
 }
 
 interface MyReportsScreenProps {
@@ -70,33 +70,33 @@ export function MyReportsScreen({ onReportIssue }: MyReportsScreenProps) {
     // First-time: no profile
     if (!profile && !editing) {
         return (
-            <div className="flex flex-col items-center gap-6 page-shell py-16">
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-700 p-8 text-center text-white w-full">
-                    <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-                    <div className="relative flex flex-col items-center gap-4">
-                        <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/20 text-4xl backdrop-blur-sm">
+            <div className="flex flex-col bg-background min-h-screen">
+                {/* SCF cyan header */}
+                <div className="px-4 pt-10 pb-6 text-white" style={{ background: "var(--scf-blue)" }}>
+                    <div className="flex flex-col items-center gap-3 text-center">
+                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/25 text-4xl">
                             🧑‍💼
                         </div>
                         <div>
                             <h1 className="text-xl font-bold">Welcome to CivicLens!</h1>
-                            <p className="mt-1 text-sm text-white/75">Create a local profile to track your reports</p>
+                            <p className="mt-1 text-sm text-white/80">Create a profile to track your reports</p>
                         </div>
                         <button
                             onClick={() => setEditing(true)}
-                            className="mt-2 flex items-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-violet-700 shadow-lg hover:bg-white/90"
+                            className="mt-1 flex items-center gap-2 rounded-full border-2 border-white px-6 py-2.5 text-sm font-bold text-white hover:bg-white/10"
                         >
                             <Plus className="h-4 w-4" /> Set Up Profile
                         </button>
                     </div>
                 </div>
 
-                <div className="section-card w-full flex flex-col items-center gap-3 py-12 text-center">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                <div className="flex flex-col items-center gap-3 p-8 text-center">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
                         <Eye className="h-6 w-6 text-muted-foreground" />
                     </div>
                     <p className="text-sm font-semibold text-foreground">No reports yet</p>
                     <p className="text-xs text-muted-foreground">Your submitted reports will appear here</p>
-                    <button onClick={onReportIssue} className="mt-2 flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md">
+                    <button onClick={onReportIssue} className="mt-1 scf-btn-primary rounded-full">
                         <FileWarning className="h-3.5 w-3.5" /> Report an Issue
                     </button>
                 </div>
@@ -171,44 +171,41 @@ export function MyReportsScreen({ onReportIssue }: MyReportsScreenProps) {
         )
     }
 
-    // Main screen  
     return (
-        <div className="flex flex-col gap-6 page-shell">
-            {/* Profile Card */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-700 p-6 text-white">
-                <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-                <div className="relative flex items-center gap-4">
-                    <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-3xl bg-white/20 text-3xl backdrop-blur-sm">
+        <div className="flex flex-col bg-background min-h-screen">
+            {/* SCF-style cyan profile header */}
+            <div className="px-4 pt-8 pb-5 text-white" style={{ background: "var(--scf-blue)" }}>
+                <div className="flex items-center gap-4">
+                    <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-white/25 text-3xl">
                         {profile!.avatarEmoji}
                     </div>
                     <div className="flex-1">
                         <h1 className="text-xl font-bold">{profile!.displayName}</h1>
                         {profile!.district && (
-                            <div className="mt-1 flex items-center gap-1.5 text-xs text-white/70">
+                            <div className="mt-1 flex items-center gap-1.5 text-xs text-white/80">
                                 <MapPin className="h-3 w-3" /> {profile!.district} District
                             </div>
                         )}
-                        <div className="mt-1.5 text-[10px] text-white/60">
+                        <div className="mt-1 text-[10px] text-white/70">
                             Member since {new Date(profile!.joinedAt).toLocaleDateString("en-LK", { month: "long", year: "numeric" })}
                         </div>
                     </div>
                     <button
                         onClick={() => setEditing(true)}
-                        className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm hover:bg-white/30"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 hover:bg-white/30"
                     >
                         <Edit3 className="h-4 w-4 text-white" />
                     </button>
                 </div>
 
-                {/* Stats */}
-                <div className="relative mt-5 grid grid-cols-3 gap-3">
+                {/* Stats row inside cyan header */}
+                <div className="mt-4 grid grid-cols-3 gap-2">
                     {[
-                        { label: "Reports", value: myReports.length, icon: "📝" },
-                        { label: "Following", value: followedCount, icon: "🔔" },
-                        { label: "Upvoted", value: upvotedCount, icon: "👍" },
+                        { label: "Reports", value: myReports.length },
+                        { label: "Following", value: followedCount },
+                        { label: "Upvoted", value: upvotedCount },
                     ].map((stat) => (
-                        <div key={stat.label} className="flex flex-col items-center gap-1 rounded-xl bg-white/15 py-3 backdrop-blur-sm">
-                            <span className="text-lg">{stat.icon}</span>
+                        <div key={stat.label} className="flex flex-col items-center rounded-xl bg-white/15 py-2.5">
                             <span className="text-lg font-black">{stat.value}</span>
                             <span className="text-[10px] text-white/70">{stat.label}</span>
                         </div>
@@ -218,9 +215,9 @@ export function MyReportsScreen({ onReportIssue }: MyReportsScreenProps) {
 
             {/* Achievement Badge */}
             {myReports.length >= 1 && (
-                <div className="flex items-center gap-3 rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/10 to-orange-500/5 px-4 py-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20">
-                        <Award className="h-4 w-4 text-amber-500" />
+                <div className="mx-4 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-500/10">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/20">
+                        <Award className="h-4 w-4 text-amber-600" />
                     </div>
                     <div>
                         <p className="text-xs font-bold text-foreground">
@@ -234,8 +231,8 @@ export function MyReportsScreen({ onReportIssue }: MyReportsScreenProps) {
             )}
 
             {/* My Reports List */}
-            <section className="section-card overflow-hidden">
-                <div className="flex items-center justify-between border-b border-border/60 bg-muted/30 px-5 py-4">
+            <section className="flex-1">
+                <div className="flex items-center justify-between border-b border-border px-4 py-3 bg-background">
                     <div className="flex items-center gap-2">
                         <TrendingUp className="h-4 w-4 text-primary" />
                         <h2 className="text-sm font-bold text-foreground">My Reports</h2>
@@ -249,38 +246,36 @@ export function MyReportsScreen({ onReportIssue }: MyReportsScreenProps) {
                 </div>
 
                 {myReports.length === 0 ? (
-                    <div className="flex flex-col items-center gap-4 py-14 text-center">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                    <div className="flex flex-col items-center gap-4 py-14 px-4 text-center">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
                             <FileWarning className="h-6 w-6 text-muted-foreground" />
                         </div>
                         <div>
                             <p className="text-sm font-semibold text-foreground">No reports yet</p>
                             <p className="text-xs text-muted-foreground mt-1">Issues you submit will appear here</p>
                         </div>
-                        <button onClick={onReportIssue} className="mt-1 flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md">
+                        <button onClick={onReportIssue} className="scf-btn-primary rounded-full text-xs px-5 py-2.5">
                             <FileWarning className="h-3.5 w-3.5" /> Report an Issue
                         </button>
                     </div>
                 ) : (
-                    <div className="flex flex-col divide-y divide-border/60">
+                    <div className="flex flex-col divide-y divide-border">
                         {myReports.map((report) => {
                             const cfg = statusConfig[report.status] || statusConfig.open
                             const Icon = cfg.icon
                             return (
-                                <div key={report.id} className="flex items-center gap-3 px-5 py-4">
-                                    <div className={cn("flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-muted")}>
+                                <div key={report.id} className="flex items-center gap-3 px-4 py-3.5">
+                                    <div className={cn("flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted")}>
                                         <Icon className={cn("h-4 w-4", cfg.color)} />
                                     </div>
                                     <div className="flex flex-1 flex-col gap-0.5 overflow-hidden">
                                         <p className="truncate text-sm font-semibold text-foreground">{report.title}</p>
                                         <div className="flex items-center gap-2">
-                                            <span className={cn("text-[10px] font-bold", cfg.color)}>{cfg.label}</span>
-                                            <span className="text-[10px] text-muted-foreground">·</span>
+                                            <span className={cfg.badgeClass}>{cfg.label}</span>
                                             <span className="text-[10px] text-muted-foreground truncate">{report.location}</span>
                                         </div>
                                         <p className="text-[10px] text-muted-foreground">{getTimeAgo(report.submittedAt)}</p>
                                     </div>
-                                    <div className="flex-shrink-0 text-[10px] font-mono text-muted-foreground">{report.id.slice(0, 8)}</div>
                                     <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                                 </div>
                             )

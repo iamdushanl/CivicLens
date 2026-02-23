@@ -4,55 +4,88 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================================
-   SEECLICKFIX COLOR SYSTEM
-   Primary: #1EADE3 (SCF cyan/sky-blue)
-   ============================================================ */
-:root {
-  /* Core SCF Colors */
-  --scf-cyan: #1EADE3;
-  --scf-cyan-dark: #1592C4;
-  --scf-cyan-light: #E8F6FD;
-  --scf-orange: #F7941D;
-  --scf-orange-light: #FEF3E2;
-  --scf-green: #4CAF50;
-  --scf-green-light: #E8F5E9;
-  --scf-red: #E53935;
-  --scf-red-light: #FFEBEE;
-  --scf-amber: #FF8F00;
-  --scf-amber-light: #FFF8E1;
+   SEECLICKFIX EXACT COLOR SYSTEM
+   Extracted from SeeClickFix app & web portal (2024)
 
-  /* Shadcn tokens mapped to SCF palette */
-  --background: oklch(1 0 0);
-  /* #FFFFFF */
-  --foreground: oklch(0.15 0 0);
-  /* #1A1A1A */
+   Primary Blue:   #1A73E8  (SCF brand blue — buttons, links, active tabs)
+   Dark Navy:      #0D2238  (Header bg, nav labels)
+   Cyan Accent:    #00AEDF  (Icon circles, accent)
+   Green:          #34A853  (Resolved / success)
+   Orange:         #F5A623  (Warnings, "In Progress")
+   Red:            #EA4335  (Destructive, close)
+   Light Grey Bg:  #F5F7FA  (Page bg)
+   White:          #FFFFFF  (Cards, header)
+   Text Primary:   #1A1A2E  (Headings)
+   Text Secondary: #6B7280  (Captions, muted)
+   Border:         #E2E8F0  (Card borders)
+   ============================================================ */
+
+:root {
+  /* === SCF EXACT BRAND COLORS === */
+  --scf-blue: #1A73E8;
+  /* Primary action blue */
+  --scf-blue-dark: #1558B0;
+  /* Hover state */
+  --scf-blue-light: #E8F0FE;
+  /* Blue tint bg */
+  --scf-navy: #0D2238;
+  /* Dark header */
+  --scf-cyan: #00AEDF;
+  /* Icon accent cyan */
+  --scf-cyan-light: #E0F6FD;
+  /* Cyan bg tint */
+  --scf-green: #34A853;
+  /* Resolved */
+  --scf-green-light: #E6F4EA;
+  /* Green bg tint */
+  --scf-orange: #F5A623;
+  /* In Progress */
+  --scf-orange-light: #FEF3E2;
+  /* Orange bg tint */
+  --scf-red: #EA4335;
+  /* Error / destructive */
+  --scf-red-light: #FCE8E6;
+  /* Red bg tint */
+  --scf-page-bg: #F5F7FA;
+  /* Page background */
+  --scf-card-bg: #FFFFFF;
+  /* Card/panel bg */
+  --scf-border: #E2E8F0;
+  /* Card border */
+  --scf-text: #1A1A2E;
+  /* Primary text */
+  --scf-text-muted: #6B7280;
+  /* Secondary/muted text */
+
+  /* === SHADCN TOKENS → SCF PALETTE === */
+  --background: oklch(0.973 0.004 250);
+  /* #F5F7FA */
+  --foreground: oklch(0.10 0.015 250);
+  /* #1A1A2E */
   --card: oklch(1 0 0);
-  /* White cards */
-  --card-foreground: oklch(0.15 0 0);
+  /* #FFFFFF */
+  --card-foreground: oklch(0.10 0.015 250);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.66 0.148 223);
-  /* #1EADE3 SCF cyan */
+  --popover-foreground: oklch(0.10 0.015 250);
+  --primary: oklch(0.54 0.18 255);
+  /* #1A73E8 SCF blue */
   --primary-foreground: oklch(1 0 0);
-  /* White on cyan */
-  --secondary: oklch(0.965 0.006 223);
-  /* #E8F6FD light cyan tint */
-  --secondary-foreground: oklch(0.66 0.148 223);
-  /* Cyan text */
-  --muted: oklch(0.97 0 0);
-  /* #F7F7F7 */
-  --muted-foreground: oklch(0.55 0 0);
+  --secondary: oklch(0.95 0.01 255);
+  /* #E8F0FE blue tint */
+  --secondary-foreground: oklch(0.54 0.18 255);
+  --muted: oklch(0.965 0.003 250);
+  /* #F5F7FA */
+  --muted-foreground: oklch(0.50 0.01 250);
   /* #6B7280 */
-  --accent: oklch(0.965 0.006 223);
-  --accent-foreground: oklch(0.66 0.148 223);
-  --destructive: oklch(0.55 0.22 27);
-  /* Red */
+  --accent: oklch(0.95 0.01 255);
+  --accent-foreground: oklch(0.54 0.18 255);
+  --destructive: oklch(0.55 0.22 25);
+  /* #EA4335 */
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.91 0 0);
-  /* #E5E7EB */
-  --input: oklch(0.91 0 0);
-  --ring: oklch(0.66 0.148 223);
-  /* Cyan focus ring */
+  --border: oklch(0.90 0.005 250);
+  /* #E2E8F0 */
+  --input: oklch(0.90 0.005 250);
+  --ring: oklch(0.54 0.18 255);
 
   /* Charts */
   --chart-1: oklch(0.646 0.222 41.116);
@@ -61,54 +94,53 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
 
-  /* Border radius — SCF is more rectangular (less pill-heavy) */
+  /* Border radius — SCF uses subtle rounded corners */
   --radius: 0.5rem;
 
   /* Sidebar */
   --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.15 0 0);
-  --sidebar-primary: oklch(0.66 0.148 223);
+  --sidebar-foreground: oklch(0.10 0.015 250);
+  --sidebar-primary: oklch(0.54 0.18 255);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.15 0 0);
-  --sidebar-border: oklch(0.91 0 0);
-  --sidebar-ring: oklch(0.66 0.148 223);
+  --sidebar-accent-foreground: oklch(0.10 0.015 250);
+  --sidebar-border: oklch(0.90 0.005 250);
+  --sidebar-ring: oklch(0.54 0.18 255);
 }
 
 .dark {
-  --background: oklch(0.13 0 0);
+  --background: oklch(0.13 0.005 250);
   --foreground: oklch(0.95 0 0);
-  --card: oklch(0.18 0 0);
+  --card: oklch(0.18 0.005 250);
   --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.18 0 0);
+  --popover: oklch(0.18 0.005 250);
   --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.66 0.148 223);
-  /* Keep SCF cyan in dark */
+  --primary: oklch(0.60 0.18 255);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.22 0.01 223);
-  --secondary-foreground: oklch(0.78 0.1 223);
+  --secondary: oklch(0.22 0.01 255);
+  --secondary-foreground: oklch(0.75 0.10 255);
   --muted: oklch(0.22 0 0);
   --muted-foreground: oklch(0.62 0 0);
-  --accent: oklch(0.22 0.01 223);
-  --accent-foreground: oklch(0.78 0.1 223);
+  --accent: oklch(0.22 0.01 255);
+  --accent-foreground: oklch(0.75 0.10 255);
   --destructive: oklch(0.45 0.18 25);
   --destructive-foreground: oklch(0.95 0 0);
   --border: oklch(0.26 0 0);
   --input: oklch(0.26 0 0);
-  --ring: oklch(0.66 0.148 223);
+  --ring: oklch(0.60 0.18 255);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.18 0 0);
+  --sidebar: oklch(0.18 0.005 250);
   --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.66 0.148 223);
+  --sidebar-primary: oklch(0.60 0.18 255);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.22 0 0);
   --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(0.26 0 0);
-  --sidebar-ring: oklch(0.66 0.148 223);
+  --sidebar-ring: oklch(0.60 0.18 255);
 }
 
 @theme inline {
@@ -174,23 +206,23 @@
 }
 
 /* ============================================================
-   LAYOUT UTILITIES
+   SCF COMPONENT SYSTEM
    ============================================================ */
 @layer utilities {
 
-  /* Page shell — space for top navbar + bottom nav */
+  /* ---- PAGE SHELL ---- */
   .page-shell {
-    @apply px-4 pt-3 pb-24;
+    @apply px-0 pt-0 pb-20;
     max-width: 640px;
     margin: 0 auto;
     width: 100%;
   }
 
-  /* ---- SCF CARD ---- */
-  /* Clean white card matching SeeClickFix card style */
+  /* ---- SCF CARDS ---- */
+  /* White card with thin border — matches SCF issue list cards */
   .scf-card {
     @apply bg-card rounded-lg border border-border;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
   }
 
   .scf-card-hover {
@@ -198,11 +230,10 @@
   }
 
   .scf-card-hover:hover {
-    box-shadow: 0 2px 8px rgba(30, 173, 227, 0.15);
-    border-color: #1EADE3;
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.12);
+    border-color: var(--scf-blue);
   }
 
-  /* Legacy alias — kept for compat */
   .section-card {
     @apply scf-card;
   }
@@ -211,46 +242,101 @@
     @apply scf-card-hover;
   }
 
+  .stat-card {
+    @apply bg-card rounded-lg border border-border flex flex-col gap-2 p-4;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+
   /* ---- SCF BUTTONS ---- */
+  /* Primary: SCF blue (#1A73E8) */
   .scf-btn-primary {
-    @apply flex items-center justify-center gap-2 rounded-md px-5 py-3 bg-primary text-primary-foreground text-sm font-semibold transition-all duration-150 active:scale-[0.98];
+    @apply flex items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-semibold transition-all duration-150 active:scale-[0.98] text-white;
+    background-color: var(--scf-blue);
   }
 
   .scf-btn-primary:hover {
-    background-color: #1592C4;
+    background-color: var(--scf-blue-dark);
   }
 
+  /* Outline: blue border + text */
   .scf-btn-outline {
-    @apply flex items-center justify-center gap-2 rounded-md px-5 py-3 border-2 border-primary text-primary text-sm font-semibold bg-transparent transition-all duration-150 active:scale-[0.98];
+    @apply flex items-center justify-center gap-2 rounded-md px-5 py-3 border-2 text-sm font-semibold bg-transparent transition-all duration-150 active:scale-[0.98];
+    border-color: var(--scf-blue);
+    color: var(--scf-blue);
   }
 
   .scf-btn-outline:hover {
-    @apply bg-secondary;
+    background-color: var(--scf-blue-light);
   }
 
-  /* ---- SCF STATUS BADGES ---- */
-  /* Exact SeeClickFix status pill colors */
+  /* Legacy aliases */
+  .btn-primary {
+    @apply scf-btn-primary;
+  }
+
+  .btn-secondary {
+    @apply flex items-center justify-center gap-2 rounded-md px-5 py-2.5 border border-border text-sm font-semibold text-foreground bg-card transition-all duration-150 active:scale-[0.98] hover:bg-muted;
+  }
+
+  .premium-input {
+    @apply scf-input;
+  }
+
+  /* ---- SCF STATUS LABELS ---- */
+  /* SCF shows status as plain colored text, NOT pills, on issue list */
+  .scf-status-text-open {
+    @apply text-xs font-semibold;
+    color: #6B7280;
+    /* grey — open = unresolved, neutral */
+  }
+
+  .scf-status-text-progress {
+    @apply text-xs font-semibold;
+    color: var(--scf-orange);
+  }
+
+  .scf-status-text-acknowledged {
+    @apply text-xs font-semibold;
+    color: var(--scf-green);
+  }
+
+  .scf-status-text-resolved {
+    @apply text-xs font-semibold;
+    color: var(--scf-green);
+  }
+
+  /* PILL badges — used on detail screens only */
   .scf-status-open {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-slate-100 text-slate-600;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+    background-color: #F3F4F6;
+    color: #6B7280;
   }
 
   .scf-status-progress {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-amber-100 text-amber-700;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+    background-color: var(--scf-orange-light);
+    color: var(--scf-orange);
   }
 
   .scf-status-acknowledged {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-green-100 text-green-700;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+    background-color: var(--scf-green-light);
+    color: var(--scf-green);
   }
 
   .scf-status-resolved {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-green-100 text-green-700;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+    background-color: var(--scf-green-light);
+    color: var(--scf-green);
   }
 
   .scf-status-closed {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-slate-200 text-slate-500;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+    background-color: #F3F4F6;
+    color: #9CA3AF;
   }
 
-  /* ---- SCF ORANGE ALERT BANNER ---- */
+  /* ---- SCF ALERT BANNERS ---- */
   .scf-alert-banner {
     @apply flex items-start gap-2.5 rounded-lg px-4 py-3 text-sm font-medium text-white;
     background-color: var(--scf-orange);
@@ -258,12 +344,12 @@
 
   .scf-alert-banner-info {
     @apply flex items-start gap-2.5 rounded-lg px-4 py-3 text-sm font-medium;
-    background-color: var(--scf-cyan-light);
-    color: var(--scf-cyan-dark);
+    background-color: var(--scf-blue-light);
+    color: var(--scf-blue-dark);
   }
 
   /* ---- SCF ICON CIRCLE ---- */
-  /* Small category icon circle — cyan bg, white icon */
+  /* Category icon circles use the SCF cyan in their app */
   .scf-icon-circle {
     @apply flex items-center justify-center rounded-full flex-shrink-0;
     background-color: var(--scf-cyan);
@@ -288,24 +374,106 @@
     height: 56px;
   }
 
+  /* Category-specific icon colours (matches SCF app) */
+  .scf-icon-potholes {
+    background-color: #F4511E;
+    color: white;
+  }
+
+  /* deep orange */
+  .scf-icon-streetLights {
+    background-color: #F5A623;
+    color: white;
+  }
+
+  /* amber */
+  .scf-icon-garbage {
+    background-color: #34A853;
+    color: white;
+  }
+
+  /* green */
+  .scf-icon-waterSupply {
+    background-color: #00AEDF;
+    color: white;
+  }
+
+  /* cyan */
+  .scf-icon-roadDamage {
+    background-color: #EA4335;
+    color: white;
+  }
+
+  /* red */
+  .scf-icon-drainage {
+    background-color: #1A73E8;
+    color: white;
+  }
+
+  /* blue */
+  .scf-icon-publicSafety {
+    background-color: #9C27B0;
+    color: white;
+  }
+
+  /* purple */
+  .scf-icon-other {
+    background-color: #78909C;
+    color: white;
+  }
+
+  /* blue-grey */
+
   /* ---- SCF BOTTOM NAV ---- */
   .scf-nav-tab {
-    @apply flex flex-col items-center justify-center gap-1 py-1.5 px-4 text-muted-foreground transition-colors duration-150 rounded-none select-none;
+    @apply flex flex-col items-center justify-center gap-0.5 py-2 px-3 text-muted-foreground transition-colors duration-150 select-none;
     min-width: 0;
     flex: 1;
+    font-size: 10px;
+    font-weight: 500;
   }
 
   .scf-nav-tab.active {
-    color: var(--scf-cyan);
+    color: var(--scf-blue);
   }
 
   .scf-nav-tab:active {
     @apply scale-95;
   }
 
+  /* ---- SCF TOGGLE (Map/List) ---- */
+  .scf-toggle {
+    @apply flex rounded-full overflow-hidden border;
+    border-color: var(--scf-blue);
+  }
+
+  .scf-toggle-btn {
+    @apply flex-1 text-sm font-semibold py-1.5 px-5 transition-all duration-150;
+  }
+
+  .scf-toggle-btn.active {
+    background-color: var(--scf-blue);
+    @apply text-white;
+  }
+
+  .scf-toggle-btn:not(.active) {
+    @apply bg-white text-foreground;
+    color: var(--scf-blue);
+  }
+
+  .dark .scf-toggle-btn:not(.active) {
+    @apply bg-card;
+  }
+
   /* ---- SCF FORM FIELDS ---- */
   .scf-input {
-    @apply w-full rounded-md border border-border bg-white px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-150;
+    @apply w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none transition-all duration-150;
+    focus-border-color: var(--scf-blue);
+  }
+
+  .scf-input:focus {
+    border-color: var(--scf-blue);
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
   }
 
   .dark .scf-input {
@@ -316,7 +484,7 @@
     @apply text-xs font-semibold text-foreground uppercase tracking-wide;
   }
 
-  /* ---- SCF SECTION HEADER ---- */
+  /* ---- SCF SECTION HEADERS ---- */
   .scf-section-title {
     @apply text-base font-bold text-foreground;
   }
@@ -325,25 +493,25 @@
     @apply text-xs text-muted-foreground mt-0.5;
   }
 
-  /* ---- SCF MAP/LIST TOGGLE ---- */
-  .scf-toggle {
-    @apply flex rounded-full overflow-hidden border border-primary;
+  /* ---- SCF UNDERLINE TABS (status filter) ---- */
+  /* These match the exact SCF tab style: no bg, just blue underline on active */
+  .scf-tab {
+    @apply relative px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors duration-150 whitespace-nowrap;
   }
 
-  .scf-toggle-btn {
-    @apply flex-1 text-sm font-semibold py-1.5 px-5 transition-all duration-150;
+  .scf-tab::after {
+    content: '';
+    @apply absolute bottom-0 left-0 right-0 h-0.5 rounded-full opacity-0 transition-all duration-150;
+    background-color: var(--scf-blue);
   }
 
-  .scf-toggle-btn.active {
-    @apply bg-primary text-primary-foreground;
+  .scf-tab.active {
+    color: var(--scf-blue);
+    font-weight: 600;
   }
 
-  .scf-toggle-btn:not(.active) {
-    @apply bg-white text-primary;
-  }
-
-  .dark .scf-toggle-btn:not(.active) {
-    @apply bg-card;
+  .scf-tab.active::after {
+    @apply opacity-100;
   }
 
   /* ---- SCF STEP INDICATOR ---- */
@@ -352,13 +520,13 @@
   }
 
   .scf-step.active {
-    border-color: var(--scf-cyan);
-    color: var(--scf-cyan);
+    border-color: var(--scf-blue);
+    color: var(--scf-blue);
   }
 
   .scf-step.done {
-    background-color: var(--scf-cyan);
-    border-color: var(--scf-cyan);
+    background-color: var(--scf-blue);
+    border-color: var(--scf-blue);
     @apply text-white;
   }
 
@@ -367,7 +535,7 @@
   }
 
   .scf-step-connector.done {
-    background-color: var(--scf-cyan);
+    background-color: var(--scf-blue);
   }
 
   /* ---- SCF HEART UPVOTE ---- */
@@ -376,14 +544,14 @@
   }
 
   .scf-heart.active {
-    color: #E53935;
+    color: #EA4335;
   }
 
   .scf-heart:hover {
-    color: #E53935;
+    color: #EA4335;
   }
 
-  /* ---- SCF LIST DIVIDER ---- */
+  /* ---- SCF DIVIDER ---- */
   .scf-divider {
     @apply border-t border-border;
   }
@@ -394,16 +562,28 @@
   }
 
   .scf-chip.active {
-    background-color: var(--scf-cyan);
-    border-color: var(--scf-cyan);
-    @apply text-white;
+    background-color: var(--scf-blue-light);
+    border-color: var(--scf-blue);
+    color: var(--scf-blue);
   }
 
   .dark .scf-chip {
     @apply bg-card;
   }
 
-  /* ---- GLASS (legacy kept for compat, minimal) ---- */
+  /* ---- SCF SEARCH BAR ---- */
+  .scf-search {
+    @apply w-full rounded-full border border-border bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-all duration-150;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+  .scf-search:focus {
+    outline: none;
+    border-color: var(--scf-blue);
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.10);
+  }
+
+  /* ---- GLASS (legacy compat) ---- */
   .glass {
     @apply bg-background/95 backdrop-blur-sm;
   }
@@ -415,6 +595,25 @@
 
   .page-subtitle {
     @apply text-sm text-muted-foreground;
+  }
+
+  /* ---- NAV PILL (legacy alias) ---- */
+  .nav-pill {
+    @apply scf-nav-tab;
+  }
+
+  .nav-pill.active {
+    color: var(--scf-blue);
+  }
+
+  /* ---- SCROLLBAR HIDE ---- */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 
   /* ---- ANIMATIONS ---- */
@@ -450,12 +649,33 @@
     }
   }
 
-  /* Remove old gradient nav-pill styles */
-  .nav-pill {
-    @apply scf-nav-tab;
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
   }
 
-  .nav-pill.active {
-    color: var(--scf-cyan);
+  .animate-slide-up {
+    animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+
+  @keyframes numberUp {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-number-up {
+    animation: numberUp 0.4s ease-out both;
   }
 }

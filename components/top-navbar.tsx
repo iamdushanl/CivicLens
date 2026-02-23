@@ -74,7 +74,7 @@ export function TopNavbar({ onNavigate }: TopNavbarProps) {
           {/* SCF-style sidebar */}
           <SheetContent side="left" className="w-72 p-0 border-r border-border">
             {/* Sidebar header — SCF cyan */}
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-border" style={{ background: "var(--scf-cyan)" }}>
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-border" style={{ background: "var(--scf-blue)" }}>
               <SheetTitle className="flex items-center gap-2.5">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
                   <Heart className="h-5 w-5 text-white fill-white" />
@@ -136,7 +136,7 @@ export function TopNavbar({ onNavigate }: TopNavbarProps) {
           className="flex items-center gap-2 group"
           aria-label="Go to home"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "var(--scf-cyan)" }}>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "var(--scf-blue)" }}>
             <Heart className="h-4 w-4 text-white fill-white" />
           </div>
           <span className="text-base font-bold text-foreground tracking-tight">CivicLens</span>

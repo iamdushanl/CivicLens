@@ -27,7 +27,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
       aria-label="Main navigation"
       style={{ boxShadow: "0 -1px 6px rgba(0,0,0,0.08)" }}
     >
-      <div className="mx-auto flex w-full max-w-xl items-stretch">
+      <div className="mx-auto flex w-full max-w-xl items-stretch justify-between">
         {navItems.map((item) => {
           const isActive = activeTab === item.id
           const Icon = item.icon
