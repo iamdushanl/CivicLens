@@ -126,6 +126,7 @@ export function TopNavbar({ onNavigate }: TopNavbarProps) {
                 </div>
                 <Switch checked={dark} onCheckedChange={toggleDark} aria-label="Toggle dark mode" />
               </div>
+              <span className="text-[10px] text-white/50 absolute bottom-1 right-1">v1.2.1-deploy-fix</span>
             </div>
           </SheetContent>
         </Sheet>
