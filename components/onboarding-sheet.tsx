@@ -50,7 +50,7 @@ function OnboardingSheet({ onDone }: OnboardingSheetProps) {
         const Icon = current.icon
         const isLast = step === steps.length - 1
         return (
-            <div className="fixed inset-0 z-[300] flex flex-col" style={{ background: "var(--scf-blue)" }}>
+            <div className="fixed inset-0 z-[300] flex h-full w-full flex-col" style={{ background: "var(--scf-blue)" }}>
                 {/* Skip */}
                 <div className="flex items-center justify-between px-6 pt-12 pb-4">
                     <div className="flex gap-1.5">
@@ -96,7 +96,7 @@ function OnboardingSheet({ onDone }: OnboardingSheetProps) {
 
     /* SeeClickFix-style splash screen */
     return (
-        <div className="fixed inset-0 z-[300] flex flex-col items-center justify-between" style={{ background: "var(--scf-blue)" }}>
+        <div className="fixed inset-0 z-[300] flex h-full w-full flex-col items-center justify-between" style={{ background: "var(--scf-blue)" }}>
             {/* City silhouette decoration */}
             <div className="w-full h-40 flex items-end justify-center opacity-20 overflow-hidden mt-8">
                 <svg viewBox="0 0 360 120" fill="none" className="w-full">

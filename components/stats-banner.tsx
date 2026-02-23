@@ -7,9 +7,9 @@ import { getStats } from "@/lib/api-client"
 
 /* SeeClickFix stats: horizontal scrollable row of clean white bordered cards */
 const statConfig = [
-  { key: "totalReports", icon: FileText, color: "#1EADE3", label: "Total Reports" },
-  { key: "resolvedThisWeek", icon: CheckCircle2, color: "#4CAF50", label: "Resolved" },
-  { key: "activeIssues", icon: AlertCircle, color: "#F7941D", label: "Active" },
+  { key: "totalReports", icon: FileText, color: "#1A73E8", label: "Total Reports" },
+  { key: "resolvedThisWeek", icon: CheckCircle2, color: "#34A853", label: "Resolved" },
+  { key: "activeIssues", icon: AlertCircle, color: "#F5A623", label: "Active" },
   { key: "topCategory", icon: TrendingUp, color: "#9C27B0", label: "Top Issue" },
 ]
 
@@ -51,17 +51,17 @@ export function StatsBanner() {
         return (
           <div
             key={stat.key}
-            className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-white dark:bg-card px-4 py-3 flex-shrink-0 min-w-[90px]"
+            className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-3 flex-shrink-0 min-w-[90px]"
             style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
           >
             <div
-              className="flex h-8 w-8 items-center justify-center rounded-full"
-              style={{ background: stat.color + "18", color: stat.color }}
+              className="flex h-10 w-10 items-center justify-center rounded-full mb-1"
+              style={{ background: stat.color + "22", color: stat.color }}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className="h-5 w-5" />
             </div>
-            <p className="text-lg font-bold text-foreground leading-none">{values[i]}</p>
-            <p className="text-[10px] text-muted-foreground text-center leading-tight">{stat.label}</p>
+            <p className="text-xl font-black text-foreground leading-none">{values[i]}</p>
+            <p className="text-[10px] font-bold text-muted-foreground text-center leading-tight uppercase tracking-wider">{stat.label}</p>
           </div>
         )
       })}

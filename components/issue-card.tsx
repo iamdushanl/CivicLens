@@ -49,7 +49,7 @@ export function IssueCard({ issue, onClick }: IssueCardProps) {
   return (
     <article
       onClick={onClick}
-      className="flex items-start gap-3 px-4 py-3.5 bg-white cursor-pointer border-b border-border transition-colors hover:bg-muted/40 animate-fade-in"
+      className="flex items-start gap-3 px-4 py-3.5 bg-card cursor-pointer border-b border-border transition-colors hover:bg-muted/40 animate-fade-in"
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick?.()}
@@ -66,8 +66,8 @@ export function IssueCard({ issue, onClick }: IssueCardProps) {
       <div className="flex-1 min-w-0">
         {/* Title row with status right-aligned */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm font-semibold text-foreground leading-snug line-clamp-1 flex-1">
-            {issue.title}
+          <h3 className="text-sm font-semibold text-foreground leading-snug line-clamp-1 flex-1 capitalize">
+            {issue.title.replace(/([A-Z])/g, ' $1').trim()}
           </h3>
           <StatusText status={issue.status} />
         </div>
