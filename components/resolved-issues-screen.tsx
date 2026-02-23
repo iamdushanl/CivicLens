@@ -55,10 +55,10 @@ export function ResolvedIssuesScreen() {
 
   const getResolvedByLabel = (resolvedBy?: string) => {
     switch (resolvedBy) {
-      case "community": return t("communityConfirmed")
-      case "reporter": return t("reporterConfirmed")
-      case "official": return t("officialConfirmation")
-      default: return t("resolved")
+      case "community": return t("resolved.communityConfirmed")
+      case "reporter": return t("resolved.reporterConfirmed")
+      case "official": return t("resolved.official")
+      default: return t("dashboard.resolved")
     }
   }
 
@@ -82,9 +82,9 @@ export function ResolvedIssuesScreen() {
             <Trophy className="h-7 w-7 text-yellow-300" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">{t("resolvedIssues")}</h1>
+            <h1 className="text-2xl font-bold text-white">{t("resolved.title")}</h1>
             <p className="mt-1 text-sm text-white/75">
-              <span className="font-bold text-white">{resolvedIssues.length}</span> issues resolved by community
+              <span className="font-bold text-white">{resolvedIssues.length}</span> {t("resolved.subtitle")}
             </p>
             <div className="mt-2 flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold backdrop-blur-sm w-fit">
               <Sparkles className="h-3 w-3 text-yellow-300" />
@@ -127,7 +127,7 @@ export function ResolvedIssuesScreen() {
                     </div>
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      {t("resolved")}
+                      {t("dashboard.resolved")}
                     </span>
                   </div>
                   <CheckCircle2 className="h-5 w-5 text-emerald-500" />
@@ -170,7 +170,7 @@ export function ResolvedIssuesScreen() {
                 {issue.resolvedAt && (
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
-                    {t("resolvedOn")}{" "}
+                    {t("resolved.resolvedOn")}{" "}
                     {new Date(issue.resolvedAt).toLocaleDateString("en-LK", {
                       year: "numeric",
                       month: "short",
@@ -184,7 +184,7 @@ export function ResolvedIssuesScreen() {
                   <div className="flex aspect-video items-center justify-center rounded-xl border border-border bg-muted/60">
                     <div className="flex flex-col items-center gap-1 text-muted-foreground">
                       <div className="text-lg">📷</div>
-                      <span className="text-[9px] font-semibold">Before</span>
+                      <span className="text-[9px] font-semibold">{t("resolved.beforeAfter").split(" ")[0]}</span>
                     </div>
                   </div>
                   <div className={cn(
@@ -193,7 +193,7 @@ export function ResolvedIssuesScreen() {
                   )}>
                     <div className="flex flex-col items-center gap-1">
                       <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                      <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">After</span>
+                      <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">{t("resolved.beforeAfter").split(" ")[2] ?? "After"}</span>
                     </div>
                   </div>
                 </div>

@@ -90,7 +90,8 @@
     "locationPrivacy": "Location is approximate for privacy",
     "reportSubmitted": "Report submitted successfully!",
     "reportId": "Report ID",
-    "viewOnMap": "View on Map"
+    "viewOnMap": "View on Map",
+    "submitError": "Something went wrong. Please try again."
   },
   "issue": {
     "title": "Issue Details",

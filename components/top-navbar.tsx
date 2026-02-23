@@ -2,7 +2,7 @@
 
 import { useLanguage } from "@/lib/language-context"
 import type { Language } from "@/lib/i18n"
-import { Eye, Globe, Menu, Sparkles, Sun, Moon, UserX, Home, AlertTriangle, CheckCircle2, Phone, Info, FileWarning, BarChart2 } from "lucide-react"
+import { Globe, Menu, Sun, Moon, UserX, Home, AlertTriangle, CheckCircle2, Phone, Info, FileWarning, BarChart2, Heart } from "lucide-react"
 import {
   Sheet,
   SheetTrigger,
@@ -19,12 +19,12 @@ interface TopNavbarProps {
 }
 
 const menuItems = [
-  { id: "home", icon: Home, labelKey: "home", gradient: "from-violet-500 to-indigo-500" },
-  { id: "report", icon: FileWarning, labelKey: "reportAnIssue", gradient: "from-rose-500 to-pink-500" },
-  { id: "analytics", icon: BarChart2, labelKey: "analytics", gradient: "from-sky-500 to-cyan-500" },
-  { id: "resolved", icon: CheckCircle2, labelKey: "resolvedIssues", gradient: "from-emerald-500 to-teal-500" },
-  { id: "contacts", icon: Phone, labelKey: "emergencyContacts", gradient: "from-amber-500 to-orange-500" },
-  { id: "about", icon: Info, labelKey: "about", gradient: "from-slate-500 to-gray-500" },
+  { id: "home", icon: Home, label: "Issues", color: "bg-slate-100 text-slate-600" },
+  { id: "report", icon: FileWarning, label: "Report an Issue", color: "bg-primary/10 text-primary" },
+  { id: "resolved", icon: CheckCircle2, label: "Resolved Issues", color: "bg-green-50 text-green-700" },
+  { id: "analytics", icon: BarChart2, label: "Analytics", color: "bg-sky-50 text-sky-700" },
+  { id: "contacts", icon: Phone, label: "Emergency Contacts", color: "bg-orange-50 text-orange-700" },
+  { id: "about", icon: Info, label: "About CivicLens", color: "bg-slate-50 text-slate-600" },
 ]
 
 const languageOptions: { code: Language; label: string; flag: string }[] = [
@@ -39,9 +39,8 @@ export function TopNavbar({ onNavigate }: TopNavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
-
-  // GAP 13 — Dark mode toggle
   const [dark, setDark] = useState(false)
+
   useEffect(() => {
     const stored = localStorage.getItem("cl_dark_mode")
     if (stored === "true" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
@@ -49,6 +48,7 @@ export function TopNavbar({ onNavigate }: TopNavbarProps) {
       setDark(true)
     }
   }, [])
+
   const toggleDark = () => {
     const next = !dark
     setDark(next)
@@ -57,173 +57,129 @@ export function TopNavbar({ onNavigate }: TopNavbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-40 glass border-b border-border/60">
-      <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-4">
-        {/* Logo */}
+    <header className="sticky top-0 z-40 bg-background border-b border-border" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+      <div className="mx-auto flex h-14 w-full max-w-xl items-center justify-between px-4">
+
+        {/* Left: Hamburger menu */}
+        <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+          <SheetTrigger asChild>
+            <button
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </SheetTrigger>
+
+          {/* SCF-style sidebar */}
+          <SheetContent side="left" className="w-72 p-0 border-r border-border">
+            {/* Sidebar header — SCF cyan */}
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-border" style={{ background: "var(--scf-cyan)" }}>
+              <SheetTitle className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+                  <Heart className="h-5 w-5 text-white fill-white" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-white leading-none">CivicLens</p>
+                  <p className="text-[10px] text-white/80 font-medium mt-0.5">Sri Lanka</p>
+                </div>
+              </SheetTitle>
+            </div>
+
+            {/* Nav links */}
+            <nav className="flex flex-col py-2" aria-label="Side navigation">
+              {menuItems.map((item) => {
+                const Icon = item.icon
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => { onNavigate(item.id); setMenuOpen(false) }}
+                    className="flex items-center gap-3.5 px-5 py-3.5 text-sm font-medium text-foreground hover:bg-muted transition-colors text-left"
+                  >
+                    <div className={cn("flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg", item.color)}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <span>{item.label}</span>
+                  </button>
+                )
+              })}
+            </nav>
+
+            {/* Settings */}
+            <div className="border-t border-border mx-4 pt-3 flex flex-col gap-2">
+              {/* Anonymous Mode */}
+              <div className="flex items-center justify-between px-1 py-2.5">
+                <div className="flex items-center gap-2.5">
+                  <UserX className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground leading-none">{t("report.anonymousToggle")}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{t("report.anonymousExplanation")}</p>
+                  </div>
+                </div>
+                <Switch checked={anonymousMode} onCheckedChange={setAnonymousMode} aria-label="Toggle anonymous mode" />
+              </div>
+              {/* Dark Mode */}
+              <div className="flex items-center justify-between px-1 py-2.5">
+                <div className="flex items-center gap-2.5">
+                  {dark ? <Moon className="h-4 w-4 text-muted-foreground" /> : <Sun className="h-4 w-4 text-muted-foreground" />}
+                  <p className="text-sm font-medium text-foreground">Dark Mode</p>
+                </div>
+                <Switch checked={dark} onCheckedChange={toggleDark} aria-label="Toggle dark mode" />
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {/* Center: App title — SCF shows city name / screen title */}
         <button
           onClick={() => onNavigate("home")}
-          className="flex items-center gap-2.5 group"
+          className="flex items-center gap-2 group"
           aria-label="Go to home"
         >
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-md shadow-violet-500/30 transition-transform group-hover:scale-105">
-            <Eye className="h-5 w-5 text-white" />
-            <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-background">
-              <span className="h-1.5 w-1.5 rounded-full bg-white" />
-            </span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "var(--scf-cyan)" }}>
+            <Heart className="h-4 w-4 text-white fill-white" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-base font-bold tracking-tight gradient-text leading-none">CivicLens</span>
-            <span className="text-[9px] font-medium text-muted-foreground leading-none mt-0.5">Sri Lanka</span>
-          </div>
+          <span className="text-base font-bold text-foreground tracking-tight">CivicLens</span>
         </button>
 
+        {/* Right: Language + Notification */}
         <div className="flex items-center gap-1">
-          {/* GAP 2 — Notification Bell */}
-          <NotificationBell onClick={() => setNotifOpen(true)} />
-          {notifOpen && <NotificationPanel onClose={() => setNotifOpen(false)} />}
           {/* Language Switcher */}
           <div className="relative">
             <button
               onClick={() => setLangOpen(!langOpen)}
-              className={cn(
-                "flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200",
-                langOpen
-                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              )}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold text-muted-foreground hover:bg-muted transition-colors"
               aria-label="Switch language"
             >
               <Globe className="h-4 w-4" />
-              <span className="hidden sm:inline">
-                {languageOptions.find((o) => o.code === language)?.flag}
-              </span>
             </button>
             {langOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setLangOpen(false)} />
-                <div className="absolute right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-border bg-card shadow-xl shadow-black/10 min-w-[140px] animate-fade-in-scale">
-                  <div className="p-1.5">
-                    {languageOptions.map((opt) => (
-                      <button
-                        key={opt.code}
-                        onClick={() => {
-                          setLanguage(opt.code)
-                          setLangOpen(false)
-                        }}
-                        className={cn(
-                          "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
-                          language === opt.code
-                            ? "bg-gradient-to-r from-violet-500/20 to-indigo-500/10 text-primary font-semibold"
-                            : "text-foreground hover:bg-muted"
-                        )}
-                      >
-                        <span className="text-base">{opt.flag}</span>
-                        <span className="text-xs">{opt.label}</span>
-                        {language === opt.code && (
-                          <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                <div className="absolute right-0 top-full z-50 mt-1.5 overflow-hidden rounded-lg border border-border bg-card shadow-lg min-w-[130px] animate-fade-in">
+                  {languageOptions.map((opt) => (
+                    <button
+                      key={opt.code}
+                      onClick={() => { setLanguage(opt.code); setLangOpen(false) }}
+                      className={cn(
+                        "flex w-full items-center gap-2.5 px-3 py-2.5 text-sm transition-colors",
+                        language === opt.code
+                          ? "bg-primary/10 text-primary font-semibold"
+                          : "text-foreground hover:bg-muted"
+                      )}
+                    >
+                      <span className="text-xs font-bold w-6">{opt.flag}</span>
+                      <span>{opt.label}</span>
+                    </button>
+                  ))}
                 </div>
               </>
             )}
           </div>
 
-          {/* Hamburger Menu */}
-          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-            <SheetTrigger asChild>
-              <button
-                className={cn(
-                  "flex min-h-[40px] min-w-[40px] items-center justify-center rounded-xl transition-all duration-200",
-                  menuOpen
-                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-                aria-label="Open menu"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-80 p-0 border-border/60">
-              {/* Sidebar Header */}
-              <div className="relative overflow-hidden border-b border-border/60 px-6 py-6">
-                <div className="absolute inset-0 bg-gradient-to-br from-violet-600/10 via-indigo-500/5 to-transparent" />
-                <SheetTitle className="relative flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-md shadow-violet-500/30">
-                    <Eye className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-base font-bold gradient-text">CivicLens</p>
-                    <p className="text-[10px] text-muted-foreground font-medium">Civic Issue Reporter</p>
-                  </div>
-                </SheetTitle>
-                <div className="relative mt-3 flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-1.5">
-                  <Sparkles className="h-3 w-3 text-emerald-500" />
-                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">AI-Powered Reporting</span>
-                </div>
-              </div>
-
-              <nav className="flex flex-col gap-1 p-3 pt-4" aria-label="Side navigation">
-                {menuItems.map((item, i) => {
-                  const Icon = item.icon
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        onNavigate(item.id === "priority" ? "home" : item.id)
-                        setMenuOpen(false)
-                      }}
-                      className={cn(
-                        "flex min-h-[48px] items-center gap-3.5 rounded-xl px-4 py-3 text-sm font-medium text-foreground transition-all hover:bg-muted group",
-                        `stagger-${Math.min(i + 1, 4)} animate-slide-up`
-                      )}
-                    >
-                      <div className={cn(
-                        "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br shadow-sm",
-                        item.gradient.replace("from-", "from-").replace("to-", "to-"),
-                        item.gradient
-                      )}>
-                        <Icon className="h-4 w-4 text-white" />
-                      </div>
-                      <span className="flex-1 text-left">{t(item.labelKey)}</span>
-                    </button>
-                  )
-                })}
-
-                {/* Settings Toggles */}
-                <div className="mt-3 flex flex-col gap-2 border-t border-border/60 pt-4">
-                  {/* Anonymous Mode */}
-                  <div className="flex items-center justify-between rounded-xl bg-muted/60 px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-500/10">
-                        <UserX className="h-4 w-4 text-slate-500" />
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-medium text-foreground">{t("anonymousMode")}</span>
-                        <span className="text-[10px] text-muted-foreground">Hide your identity</span>
-                      </div>
-                    </div>
-                    <Switch checked={anonymousMode} onCheckedChange={setAnonymousMode} aria-label="Toggle anonymous mode" />
-                  </div>
-
-                  {/* GAP 13 — Dark Mode Toggle */}
-                  <div className="flex items-center justify-between rounded-xl bg-muted/60 px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10">
-                        {dark ? <Moon className="h-4 w-4 text-indigo-500" /> : <Sun className="h-4 w-4 text-amber-500" />}
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-medium text-foreground">Dark Mode</span>
-                        <span className="text-[10px] text-muted-foreground">{dark ? "Currently dark" : "Currently light"}</span>
-                      </div>
-                    </div>
-                    <Switch checked={dark} onCheckedChange={toggleDark} aria-label="Toggle dark mode" />
-                  </div>
-                </div>
-              </nav>
-            </SheetContent>
-          </Sheet>
+          {/* Notification Bell */}
+          <NotificationBell onClick={() => setNotifOpen(true)} />
+          {notifOpen && <NotificationPanel onClose={() => setNotifOpen(false)} />}
         </div>
       </div>
     </header>

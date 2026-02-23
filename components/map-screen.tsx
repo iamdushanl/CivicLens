@@ -4,19 +4,20 @@ import { useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/lib/language-context"
-import { MapPin, Navigation } from "lucide-react"
-import { getCategoryIcon, getSeverityColor } from "@/lib/category-helpers"
-import { Badge } from "@/components/ui/badge"
+import { MapPin, List, Navigation, Filter } from "lucide-react"
+import { getCategoryIcon } from "@/lib/category-helpers"
 import type { Issue } from "@/lib/types"
 import { getIssues } from "@/lib/api-client"
+import { cn } from "@/lib/utils"
+import { IssueCard } from "@/components/issue-card"
 
 const LeafletIssuesMap = dynamic(
-  () => import("@/components/leaflet-issues-map").then((module) => module.LeafletIssuesMap),
+  () => import("@/components/leaflet-issues-map").then((mod) => mod.LeafletIssuesMap),
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full w-full items-center justify-center text-sm font-medium text-muted-foreground">
-        Loading map...
+      <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+        Loading map…
       </div>
     ),
   }
@@ -24,17 +25,12 @@ const LeafletIssuesMap = dynamic(
 
 const COLOMBO_CENTER: [number, number] = [6.9271, 79.8612]
 
-function distanceKm(a: [number, number], b: [number, number]): number {
-  const toRad = (d: number) => (d * Math.PI) / 180
-  const earthRadiusKm = 6371
-  const dLat = toRad(b[0] - a[0])
-  const dLon = toRad(b[1] - a[1])
-  const lat1 = toRad(a[0])
-  const lat2 = toRad(b[0])
-  const h =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2)
-  return 2 * earthRadiusKm * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h))
+function distKm(a: [number, number], b: [number, number]): number {
+  const R = 6371
+  const dLat = ((b[0] - a[0]) * Math.PI) / 180
+  const dLon = ((b[1] - a[1]) * Math.PI) / 180
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos((a[0] * Math.PI) / 180) * Math.cos((b[0] * Math.PI) / 180) * Math.sin(dLon / 2) ** 2
+  return 2 * R * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h))
 }
 
 export function MapScreen() {
@@ -45,128 +41,110 @@ export function MapScreen() {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [locating, setLocating] = useState(false)
 
+  /* SCF: Map / List toggle at top center exactly like screenshot */
+  const [view, setView] = useState<"map" | "list">("map")
+
   useEffect(() => {
     let active = true
-
-    const loadIssues = async () => {
-      const result = await getIssues({ sort: "upvotes" })
-      if (active) {
-        setAllIssues(result)
-      }
-    }
-
-    loadIssues()
-
-    return () => {
-      active = false
-    }
+    getIssues({ sort: "upvotes" }).then((result) => { if (active) setAllIssues(result) })
+    return () => { active = false }
   }, [])
 
   const nearbyIssues = useMemo(() => {
-    if (!userLocation) {
-      return allIssues.slice(0, 5)
-    }
-
+    if (!userLocation) return allIssues.slice(0, 8)
     return [...allIssues]
-      .filter((issue) => issue.coordinates)
+      .filter((i) => i.coordinates)
       .sort((a, b) => {
-        const aCoord: [number, number] = [a.coordinates!.lat, a.coordinates!.lng]
-        const bCoord: [number, number] = [b.coordinates!.lat, b.coordinates!.lng]
-        return distanceKm(userLocation, aCoord) - distanceKm(userLocation, bCoord)
+        const aC: [number, number] = [a.coordinates!.lat, a.coordinates!.lng]
+        const bC: [number, number] = [b.coordinates!.lat, b.coordinates!.lng]
+        return distKm(userLocation, aC) - distKm(userLocation, bC)
       })
-      .slice(0, 5)
+      .slice(0, 8)
   }, [allIssues, userLocation])
 
   const handleNearMe = () => {
-    if (!navigator.geolocation || locating) {
-      return
-    }
-
+    if (!navigator.geolocation || locating) return
     setLocating(true)
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const nextCenter: [number, number] = [position.coords.latitude, position.coords.longitude]
-        setUserLocation(nextCenter)
-        setMapCenter(nextCenter)
-        setLocating(false)
+      (pos) => {
+        const c: [number, number] = [pos.coords.latitude, pos.coords.longitude]
+        setUserLocation(c); setMapCenter(c); setLocating(false)
       },
-      () => {
-        setLocating(false)
-      },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      () => setLocating(false),
+      { enableHighAccuracy: true, timeout: 5000 }
     )
   }
 
-  const handleIssueSelect = (issueId: string) => {
-    const selected = allIssues.find((issue) => issue.id === issueId)
-    if (!selected?.coordinates) {
-      return
-    }
-    setMapCenter([selected.coordinates.lat, selected.coordinates.lng])
-  }
-
-  const handleIssueClick = (issueId: string) => {
-    router.push(`/${language}/issue/${issueId}`)
-  }
+  const handleIssueClick = (issueId: string) => router.push(`/${language}/issue/${issueId}`)
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="page-title">{t("nav.map")}</h1>
-        <button
-          onClick={handleNearMe}
-          className="flex min-h-11 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
-        >
-          <Navigation className="h-3.5 w-3.5" />
-          {locating ? t("map.locating") : t("dashboard.nearMe")}
-        </button>
+    <div className="flex flex-col bg-background min-h-screen">
+      {/* SCF-style top strip: Map / List toggle LEFT + Filter button RIGHT */}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-background border-b border-border gap-3">
+        {/* Map/List toggle — the most recognizable SCF UI element */}
+        <div className="scf-toggle">
+          <button
+            onClick={() => setView("map")}
+            className={cn("scf-toggle-btn flex items-center gap-1.5", view === "map" && "active")}
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            Map
+          </button>
+          <button
+            onClick={() => setView("list")}
+            className={cn("scf-toggle-btn flex items-center gap-1.5", view === "list" && "active")}
+          >
+            <List className="h-3.5 w-3.5" />
+            List
+          </button>
+        </div>
+
+        {/* Near Me + Filter */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleNearMe}
+            className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors"
+          >
+            <Navigation className={cn("h-3.5 w-3.5", locating && "animate-spin")} />
+            {locating ? "Locating…" : "Near Me"}
+          </button>
+          <button className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground hover:bg-muted transition-colors">
+            <Filter className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
-      <div className="section-card relative aspect-4/3 overflow-hidden bg-muted">
-        <LeafletIssuesMap
-          issues={allIssues}
-          center={mapCenter}
-          userLocation={userLocation}
-          onSelectIssue={handleIssueSelect}
-        />
-      </div>
-
-      {/* Nearby issues list */}
-      <h2 className="text-sm font-semibold text-foreground">{t("map.nearbyIssues")}</h2>
-      <div className="flex flex-col gap-2">
-        {nearbyIssues.map((issue) => {
-          const CategoryIcon = getCategoryIcon(issue.category)
-          const severityLabel =
-            issue.severity === "low"
-              ? t("report.low")
-              : issue.severity === "medium"
-                ? t("report.medium")
-                : issue.severity === "high"
-                  ? t("report.high")
-                  : t("report.critical")
-          return (
-            <div
-              key={issue.id}
-              onClick={() => handleIssueClick(issue.id)}
-              className="section-card flex cursor-pointer items-center gap-3 p-3 transition-colors hover:bg-accent"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <CategoryIcon className="h-4 w-4 text-primary" />
-              </div>
-              <div className="flex flex-1 flex-col gap-0.5 overflow-hidden">
-                <p className="text-xs font-semibold text-foreground truncate">{issue.title}</p>
-                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                  <MapPin className="h-2.5 w-2.5" />
-                  {issue.location}
-                </div>
-              </div>
-              <Badge className={`text-[9px] font-semibold ${getSeverityColor(issue.severity)}`}>
-                {severityLabel}
-              </Badge>
+      {view === "map" ? (
+        /* Full-bleed map — SCF style */
+        <div className="flex-1 relative" style={{ minHeight: "calc(100vh - 130px)" }}>
+          <LeafletIssuesMap
+            issues={allIssues}
+            center={mapCenter}
+            userLocation={userLocation}
+            onSelectIssue={(id) => {
+              const found = allIssues.find((i) => i.id === id)
+              if (found?.coordinates) setMapCenter([found.coordinates.lat, found.coordinates.lng])
+            }}
+          />
+        </div>
+      ) : (
+        /* List view — same SCF issue list */
+        <div className="flex-1 divide-y divide-border">
+          {nearbyIssues.length === 0 ? (
+            <div className="flex items-center justify-center py-20 text-sm text-muted-foreground">
+              No issues found
             </div>
-          )
-        })}
-      </div>
+          ) : (
+            nearbyIssues.map((issue) => (
+              <IssueCard
+                key={issue.id}
+                issue={issue}
+                onClick={() => handleIssueClick(issue.id)}
+              />
+            ))
+          )}
+        </div>
+      )}
     </div>
   )
 }
