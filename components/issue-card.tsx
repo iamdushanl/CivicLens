@@ -66,8 +66,8 @@ export function IssueCard({ issue, onClick }: IssueCardProps) {
       <div className="flex-1 min-w-0">
         {/* Title row with status right-aligned */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm font-semibold text-foreground leading-snug line-clamp-1 flex-1 capitalize">
-            {issue.title.replace(/([A-Z])/g, ' $1').trim()}
+          <h3 className="text-sm font-semibold text-foreground leading-snug line-clamp-1 flex-1">
+            {issue.title.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim()}
           </h3>
           <StatusText status={issue.status} />
         </div>

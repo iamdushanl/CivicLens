@@ -27,7 +27,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
       aria-label="Main navigation"
       style={{ boxShadow: "0 -1px 6px rgba(0,0,0,0.08)" }}
     >
-      <div className="mx-auto flex w-full max-w-xl items-stretch justify-between">
+      <div className="mx-auto flex w-full max-w-2xl items-stretch">
         {navItems.map((item) => {
           const isActive = activeTab === item.id
           const Icon = item.icon
@@ -41,7 +41,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
               aria-label={item.ariaLabel}
               onClick={() => onTabChange(item.id)}
               className={cn(
-                "scf-nav-tab",
+                "scf-nav-tab flex-1 min-w-0 flex flex-col items-center justify-center py-2 px-1",
                 isActive ? "active" : "",
                 isReport && isActive && "text-primary"
               )}
