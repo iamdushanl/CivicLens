@@ -13,6 +13,17 @@ const statConfig = [
   { key: "topCategory", icon: TrendingUp, color: "#9C27B0", label: "Top Issue" },
 ]
 
+const CATEGORY_NAMES: Record<string, string> = {
+  potholes: "Potholes",
+  streetLights: "Street Lights",
+  garbage: "Garbage",
+  waterSupply: "Water Supply",
+  roadDamage: "Road Damage",
+  drainage: "Drainage",
+  publicSafety: "Public Safety",
+  other: "Other",
+}
+
 const defaultValues = ["1,247", "38", "156", "Potholes"]
 
 export function StatsBanner() {
@@ -27,7 +38,7 @@ export function StatsBanner() {
         String(result.totalReports),
         String(result.resolvedThisWeek),
         String(result.activeIssues),
-        t(result.topCategory) !== result.topCategory ? t(result.topCategory) : result.topCategory,
+        CATEGORY_NAMES[result.topCategory] ?? result.topCategory,
       ])
     })
     return () => { active = false }

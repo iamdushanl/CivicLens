@@ -458,4 +458,68 @@
   .nav-pill.active {
     color: var(--scf-cyan);
   }
+
+  /* ---- LEGACY COMPAT ALIASES ---- */
+  /* btn-primary → SCF cyan button */
+  .btn-primary {
+    @apply scf-btn-primary;
+  }
+
+  /* btn-secondary → outlined SCF button */
+  .btn-secondary {
+    @apply flex items-center justify-center gap-2 rounded-md px-5 py-2.5 border border-border text-sm font-semibold text-foreground bg-card transition-all duration-150 active:scale-[0.98] hover:bg-muted;
+  }
+
+  /* premium-input → SCF clean input */
+  .premium-input {
+    @apply scf-input;
+  }
+
+  /* stat-card → SCF stat card */
+  .stat-card {
+    @apply relative overflow-hidden rounded-xl border border-border bg-card p-4 flex flex-col gap-3;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Hide scrollbar on overflow-x-auto strips */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Slide up animation for modals/sheets */
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+
+  /* Number count animation */
+  @keyframes numberUp {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-number-up {
+    animation: numberUp 0.4s ease-out both;
+  }
 }
