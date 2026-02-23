@@ -167,8 +167,8 @@ export function ReportIssueScreen() {
     try {
       const fallbackId = `CL-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`
       const fd = new FormData()
-      fd.append("title", title.trim() || t("reportIssue"))
-      fd.append("description", description.trim() || t("description"))
+      fd.append("title", title.trim() || t("report.title"))
+      fd.append("description", description.trim() || t("report.description"))
       fd.append("category", aiCategory)
       fd.append("severity", urgency)
       fd.append("location", locationText.trim() || (locationDetected ? "Detected location" : "Unknown location"))
@@ -199,7 +199,7 @@ export function ReportIssueScreen() {
       })
       setSubmitted(true)
     } catch {
-      setSubmitError(t("reportIssue"))
+      setSubmitError(t("report.submitError"))
     } finally {
       setDetecting(false); setIsSubmitting(false)
     }
@@ -289,8 +289,8 @@ export function ReportIssueScreen() {
     <div className="flex flex-col page-shell">
       {/* Page header */}
       <div className="mb-2 flex flex-col gap-1">
-        <h1 className="page-title">{t("reportAnIssue")}</h1>
-        <p className="page-subtitle">Help improve your community in 4 simple steps</p>
+        <h1 className="page-title">{t("report.title")}</h1>
+        <p className="page-subtitle">{t("report.step1Description")}</p>
       </div>
 
       <StepIndicator />
@@ -343,7 +343,7 @@ export function ReportIssueScreen() {
                   <Camera className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-sm font-semibold text-foreground">{t("takePhoto")}</span>
+                  <span className="text-sm font-semibold text-foreground">{t("report.takePhoto")}</span>
                   <span className="text-xs text-muted-foreground">{photos.length}/4 photos</span>
                 </div>
               </button>

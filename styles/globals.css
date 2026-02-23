@@ -3,79 +3,116 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================
+   SEECLICKFIX COLOR SYSTEM
+   Primary: #1EADE3 (SCF cyan/sky-blue)
+   ============================================================ */
 :root {
+  /* Core SCF Colors */
+  --scf-cyan: #1EADE3;
+  --scf-cyan-dark: #1592C4;
+  --scf-cyan-light: #E8F6FD;
+  --scf-orange: #F7941D;
+  --scf-orange-light: #FEF3E2;
+  --scf-green: #4CAF50;
+  --scf-green-light: #E8F5E9;
+  --scf-red: #E53935;
+  --scf-red-light: #FFEBEE;
+  --scf-amber: #FF8F00;
+  --scf-amber-light: #FFF8E1;
+
+  /* Shadcn tokens mapped to SCF palette */
   --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* #FFFFFF */
+  --foreground: oklch(0.15 0 0);
+  /* #1A1A1A */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  /* White cards */
+  --card-foreground: oklch(0.15 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.15 0 0);
+  --primary: oklch(0.66 0.148 223);
+  /* #1EADE3 SCF cyan */
+  --primary-foreground: oklch(1 0 0);
+  /* White on cyan */
+  --secondary: oklch(0.965 0.006 223);
+  /* #E8F6FD light cyan tint */
+  --secondary-foreground: oklch(0.66 0.148 223);
+  /* Cyan text */
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  /* #F7F7F7 */
+  --muted-foreground: oklch(0.55 0 0);
+  /* #6B7280 */
+  --accent: oklch(0.965 0.006 223);
+  --accent-foreground: oklch(0.66 0.148 223);
+  --destructive: oklch(0.55 0.22 27);
+  /* Red */
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.91 0 0);
+  /* #E5E7EB */
+  --input: oklch(0.91 0 0);
+  --ring: oklch(0.66 0.148 223);
+  /* Cyan focus ring */
+
+  /* Charts */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+
+  /* Border radius — SCF is more rectangular (less pill-heavy) */
+  --radius: 0.5rem;
+
+  /* Sidebar */
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.15 0 0);
+  --sidebar-primary: oklch(0.66 0.148 223);
+  --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-accent-foreground: oklch(0.15 0 0);
+  --sidebar-border: oklch(0.91 0 0);
+  --sidebar-ring: oklch(0.66 0.148 223);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
+  --background: oklch(0.13 0 0);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.18 0 0);
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.18 0 0);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.66 0.148 223);
+  /* Keep SCF cyan in dark */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.22 0.01 223);
+  --secondary-foreground: oklch(0.78 0.1 223);
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.62 0 0);
+  --accent: oklch(0.22 0.01 223);
+  --accent-foreground: oklch(0.78 0.1 223);
+  --destructive: oklch(0.45 0.18 25);
+  --destructive-foreground: oklch(0.95 0 0);
+  --border: oklch(0.26 0 0);
+  --input: oklch(0.26 0 0);
+  --ring: oklch(0.66 0.148 223);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --sidebar: oklch(0.18 0 0);
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-primary: oklch(0.66 0.148 223);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.22 0 0);
+  --sidebar-accent-foreground: oklch(0.95 0 0);
+  --sidebar-border: oklch(0.26 0 0);
+  --sidebar-ring: oklch(0.66 0.148 223);
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
+  --font-sans: var(--font-inter, 'Inter', 'Helvetica Neue', Arial, sans-serif);
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -101,10 +138,10 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 8px);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -115,11 +152,310 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    -webkit-tap-highlight-color: transparent;
   }
+
+  html {
+    font-feature-settings: "kern" 1, "liga" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+}
+
+/* ============================================================
+   LAYOUT UTILITIES
+   ============================================================ */
+@layer utilities {
+
+  /* Page shell — space for top navbar + bottom nav */
+  .page-shell {
+    @apply px-4 pt-3 pb-24;
+    max-width: 640px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ---- SCF CARD ---- */
+  /* Clean white card matching SeeClickFix card style */
+  .scf-card {
+    @apply bg-card rounded-lg border border-border;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+  .scf-card-hover {
+    @apply scf-card transition-all duration-150 cursor-pointer;
+  }
+
+  .scf-card-hover:hover {
+    box-shadow: 0 2px 8px rgba(30, 173, 227, 0.15);
+    border-color: #1EADE3;
+  }
+
+  /* Legacy alias — kept for compat */
+  .section-card {
+    @apply scf-card;
+  }
+
+  .section-card-hover {
+    @apply scf-card-hover;
+  }
+
+  /* ---- SCF BUTTONS ---- */
+  .scf-btn-primary {
+    @apply flex items-center justify-center gap-2 rounded-md px-5 py-3 bg-primary text-primary-foreground text-sm font-semibold transition-all duration-150 active:scale-[0.98];
+  }
+
+  .scf-btn-primary:hover {
+    background-color: #1592C4;
+  }
+
+  .scf-btn-outline {
+    @apply flex items-center justify-center gap-2 rounded-md px-5 py-3 border-2 border-primary text-primary text-sm font-semibold bg-transparent transition-all duration-150 active:scale-[0.98];
+  }
+
+  .scf-btn-outline:hover {
+    @apply bg-secondary;
+  }
+
+  /* ---- SCF STATUS BADGES ---- */
+  /* Exact SeeClickFix status pill colors */
+  .scf-status-open {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-slate-100 text-slate-600;
+  }
+
+  .scf-status-progress {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-amber-100 text-amber-700;
+  }
+
+  .scf-status-acknowledged {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-green-100 text-green-700;
+  }
+
+  .scf-status-resolved {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-green-100 text-green-700;
+  }
+
+  .scf-status-closed {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-slate-200 text-slate-500;
+  }
+
+  /* ---- SCF ORANGE ALERT BANNER ---- */
+  .scf-alert-banner {
+    @apply flex items-start gap-2.5 rounded-lg px-4 py-3 text-sm font-medium text-white;
+    background-color: var(--scf-orange);
+  }
+
+  .scf-alert-banner-info {
+    @apply flex items-start gap-2.5 rounded-lg px-4 py-3 text-sm font-medium;
+    background-color: var(--scf-cyan-light);
+    color: var(--scf-cyan-dark);
+  }
+
+  /* ---- SCF ICON CIRCLE ---- */
+  /* Small category icon circle — cyan bg, white icon */
+  .scf-icon-circle {
+    @apply flex items-center justify-center rounded-full flex-shrink-0;
+    background-color: var(--scf-cyan);
+    color: white;
+    width: 40px;
+    height: 40px;
+  }
+
+  .scf-icon-circle-sm {
+    @apply flex items-center justify-center rounded-full flex-shrink-0;
+    background-color: var(--scf-cyan);
+    color: white;
+    width: 32px;
+    height: 32px;
+  }
+
+  .scf-icon-circle-lg {
+    @apply flex items-center justify-center rounded-full flex-shrink-0;
+    background-color: var(--scf-cyan);
+    color: white;
+    width: 56px;
+    height: 56px;
+  }
+
+  /* ---- SCF BOTTOM NAV ---- */
+  .scf-nav-tab {
+    @apply flex flex-col items-center justify-center gap-1 py-1.5 px-4 text-muted-foreground transition-colors duration-150 rounded-none select-none;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .scf-nav-tab.active {
+    color: var(--scf-cyan);
+  }
+
+  .scf-nav-tab:active {
+    @apply scale-95;
+  }
+
+  /* ---- SCF FORM FIELDS ---- */
+  .scf-input {
+    @apply w-full rounded-md border border-border bg-white px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-150;
+  }
+
+  .dark .scf-input {
+    @apply bg-card;
+  }
+
+  .scf-label {
+    @apply text-xs font-semibold text-foreground uppercase tracking-wide;
+  }
+
+  /* ---- SCF SECTION HEADER ---- */
+  .scf-section-title {
+    @apply text-base font-bold text-foreground;
+  }
+
+  .scf-section-subtitle {
+    @apply text-xs text-muted-foreground mt-0.5;
+  }
+
+  /* ---- SCF MAP/LIST TOGGLE ---- */
+  .scf-toggle {
+    @apply flex rounded-full overflow-hidden border border-primary;
+  }
+
+  .scf-toggle-btn {
+    @apply flex-1 text-sm font-semibold py-1.5 px-5 transition-all duration-150;
+  }
+
+  .scf-toggle-btn.active {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  .scf-toggle-btn:not(.active) {
+    @apply bg-white text-primary;
+  }
+
+  .dark .scf-toggle-btn:not(.active) {
+    @apply bg-card;
+  }
+
+  /* ---- SCF STEP INDICATOR ---- */
+  .scf-step {
+    @apply flex items-center justify-center rounded-full w-8 h-8 text-sm font-bold border-2 border-border text-muted-foreground transition-all duration-200;
+  }
+
+  .scf-step.active {
+    border-color: var(--scf-cyan);
+    color: var(--scf-cyan);
+  }
+
+  .scf-step.done {
+    background-color: var(--scf-cyan);
+    border-color: var(--scf-cyan);
+    @apply text-white;
+  }
+
+  .scf-step-connector {
+    @apply flex-1 h-0.5 bg-border transition-all duration-200;
+  }
+
+  .scf-step-connector.done {
+    background-color: var(--scf-cyan);
+  }
+
+  /* ---- SCF HEART UPVOTE ---- */
+  .scf-heart {
+    @apply flex items-center gap-1 text-xs text-muted-foreground transition-colors duration-150 cursor-pointer select-none;
+  }
+
+  .scf-heart.active {
+    color: #E53935;
+  }
+
+  .scf-heart:hover {
+    color: #E53935;
+  }
+
+  /* ---- SCF LIST DIVIDER ---- */
+  .scf-divider {
+    @apply border-t border-border;
+  }
+
+  /* ---- SCF FILTER CHIP ---- */
+  .scf-chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold border border-border bg-white text-muted-foreground transition-all duration-150 whitespace-nowrap cursor-pointer;
+  }
+
+  .scf-chip.active {
+    background-color: var(--scf-cyan);
+    border-color: var(--scf-cyan);
+    @apply text-white;
+  }
+
+  .dark .scf-chip {
+    @apply bg-card;
+  }
+
+  /* ---- GLASS (legacy kept for compat, minimal) ---- */
+  .glass {
+    @apply bg-background/95 backdrop-blur-sm;
+  }
+
+  /* ---- PAGE TITLE ---- */
+  .page-title {
+    @apply text-xl font-bold text-foreground;
+  }
+
+  .page-subtitle {
+    @apply text-sm text-muted-foreground;
+  }
+
+  /* ---- ANIMATIONS ---- */
+  .animate-fade-in {
+    animation: fadeIn 0.25s ease-out both;
+  }
+
+  .stagger-1 {
+    animation-delay: 0ms;
+  }
+
+  .stagger-2 {
+    animation-delay: 60ms;
+  }
+
+  .stagger-3 {
+    animation-delay: 120ms;
+  }
+
+  .stagger-4 {
+    animation-delay: 180ms;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Remove old gradient nav-pill styles */
+  .nav-pill {
+    @apply scf-nav-tab;
+  }
+
+  .nav-pill.active {
+    color: var(--scf-cyan);
   }
 }

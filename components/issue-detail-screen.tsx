@@ -6,7 +6,7 @@ import type { Issue, Comment } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import {
-  ArrowLeft, ThumbsUp, MapPin, Send, CheckCircle2, Brain, User, Clock,
+  ArrowLeft, Heart, MapPin, Send, CheckCircle2, Brain, User, Clock,
   ImageIcon, Share2, Bell, BellOff, Circle, CheckCircle, XCircle,
   ShieldCheck, Copy, MessageCircle, Loader2,
 } from "lucide-react"
@@ -167,10 +167,10 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
   }, [issue.id, newComment, commentAnon, commentSubmitting])
 
   // ── Status labels
-  const statusConfig: Record<string, { label: string; icon: typeof Circle; color: string; dot: string }> = {
-    open: { label: "Open", icon: Circle, color: "text-violet-600 dark:text-violet-400", dot: "bg-violet-500" },
-    "in-progress": { label: "In Progress", icon: CheckCircle, color: "text-amber-600 dark:text-amber-400", dot: "bg-amber-500" },
-    resolved: { label: "Resolved", icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400", dot: "bg-emerald-500" },
+  const statusConfig: Record<string, { label: string; icon: typeof Circle; color: string; dot: string; badgeClass: string }> = {
+    open: { label: "Open", icon: Circle, color: "text-slate-600", dot: "bg-slate-400", badgeClass: "scf-status-open" },
+    "in-progress": { label: "Acknowledged", icon: CheckCircle, color: "text-green-700", dot: "bg-green-500", badgeClass: "scf-status-acknowledged" },
+    resolved: { label: "Resolved", icon: CheckCircle2, color: "text-green-700", dot: "bg-green-500", badgeClass: "scf-status-resolved" },
   }
 
   // ── Status history (use real or synthesise fallback)
@@ -194,48 +194,51 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
       : t("issue.resolved")
 
   return (
-    <div className="flex flex-col gap-0">
-      {/* Hero gradient strip */}
-      <div className={cn("h-2 w-full bg-gradient-to-r", gradient)} />
+    <div className="flex flex-col gap-0 bg-background">
 
-      <div className="flex flex-col gap-6 px-4 py-5">
-        {/* Back + Actions row */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onBack}
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-foreground transition-colors hover:bg-muted"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="flex-1 text-base font-bold text-foreground line-clamp-1">{issue.title}</h1>
-          {/* Share */}
-          <button
-            onClick={handleShare}
-            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-border text-foreground transition-all hover:bg-muted hover:border-primary/40"
-            aria-label="Share"
-          >
-            <Share2 className="h-4 w-4" />
-            {shareToast && (
-              <span className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-foreground px-3 py-1.5 text-[10px] font-semibold text-background shadow-lg">
-                Copied to clipboard!
-              </span>
-            )}
-          </button>
-          {/* Follow */}
-          <button
-            onClick={handleFollow}
-            className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-xl border transition-all",
-              following
-                ? "border-violet-500/40 bg-violet-500/10 text-violet-600 dark:text-violet-400"
-                : "border-border text-muted-foreground hover:bg-muted hover:border-primary/40"
-            )}
-            aria-label={following ? "Unfollow" : "Follow"}
-          >
-            {following ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-          </button>
+      {/* SCF-style top bar: back arrow + title + share/follow */}
+      <div className="flex items-center gap-2 px-3 py-3 border-b border-border bg-background">
+        <button
+          onClick={onBack}
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-colors"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        {/* SCF breadcrumb: Category > Title */}
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-muted-foreground font-medium">{issue.category.replace(/([A-Z])/g, ' $1').trim()}</p>
+          <h1 className="text-sm font-bold text-foreground line-clamp-1">{issue.title}</h1>
         </div>
+        {/* Share */}
+        <button
+          onClick={handleShare}
+          className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted transition-colors"
+          aria-label="Share"
+        >
+          <Share2 className="h-4 w-4" />
+          {shareToast && (
+            <span className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-foreground px-3 py-1.5 text-[10px] font-semibold text-background shadow-lg">
+              Copied!
+            </span>
+          )}
+        </button>
+        {/* Follow */}
+        <button
+          onClick={handleFollow}
+          className={cn(
+            "flex h-9 w-9 items-center justify-center rounded-lg border transition-colors",
+            following
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-border text-muted-foreground hover:bg-muted"
+          )}
+          aria-label={following ? "Unfollow" : "Follow"}
+        >
+          {following ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-5 px-4 py-4">
 
         {/* Photo */}
         {issue.photos && issue.photos.length > 0 && issue.photos[0] !== "demo" ? (
@@ -263,19 +266,17 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
           </div>
         )}
 
-        {/* Badges row */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm", gradient)}>
+        {/* SCF Badges row: icon circle + status badge */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="scf-icon-circle">
             <CategoryIcon className="h-5 w-5 text-white" />
           </div>
-          <Badge className={cn("text-[10px] font-semibold", getSeverityColor(issue.severity))}>
-            {severityLabel}
-          </Badge>
-          <Badge className={cn("text-[10px] font-medium", getStatusColor(issue.status))}>
+          {/* SCF-exact status badge — green for resolved/acknowledged, grey for open */}
+          <span className={statusConfig[issue.status]?.badgeClass ?? "scf-status-open"}>
             {statusLabel}
-          </Badge>
+          </span>
           {following && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2.5 py-1 text-[10px] font-bold text-violet-600 dark:text-violet-400">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold text-primary">
               <Bell className="h-2.5 w-2.5" /> Following
             </span>
           )}
@@ -354,19 +355,19 @@ export function IssueDetailScreen({ issue, onBack }: IssueDetailScreenProps) {
         <button
           onClick={handleUpvote}
           className={cn(
-            "flex min-h-12 items-center justify-center gap-2.5 rounded-xl border-2 px-6 py-3 text-sm font-semibold transition-all duration-200",
+            "flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold transition-all duration-200",
             voted
-              ? "border-transparent bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/30"
-              : "border-border bg-card text-foreground hover:border-violet-500/40 hover:bg-violet-500/5"
+              ? "border-red-300 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+              : "border-border bg-card text-muted-foreground hover:border-red-300 hover:text-red-500"
           )}
         >
-          <ThumbsUp className={cn("h-5 w-5 transition-transform", voted && "fill-current scale-110")} />
-          {voted ? "Upvoted" : t("issue.upvote")} · {upvotes}
+          <Heart className={cn("h-4 w-4 transition-transform", voted && "fill-current scale-110")} />
+          {voted ? "Liked" : t("issue.upvote")} · {upvotes}
         </button>
 
         {/* ── RESOLUTION VOTE ── */}
         {issue.status !== "resolved" && (
-          <div className="section-card flex flex-col gap-4 p-4">
+          <div className="scf-card flex flex-col gap-4 p-4">
             <div className="flex flex-col gap-0.5">
               <h3 className="text-sm font-bold text-foreground">{t("issue.hasThisBeenResolved")}</h3>
               <p className="text-[11px] text-muted-foreground">Community confirms when at least 3 people say yes</p>
